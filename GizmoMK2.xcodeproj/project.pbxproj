@@ -6,6 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		340D5C4B2CDD5F1500F8A710 /* SwiftUIIntrospect in Frameworks */ = {isa = PBXBuildFile; productRef = 340D5C4A2CDD5F1500F8A710 /* SwiftUIIntrospect */; };
+		340DBA2F2CE82D0600B88EB3 /* ExecutorCreationSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 340DBA2E2CE82D0600B88EB3 /* ExecutorCreationSheetView.swift */; };
+		34907F112CE5D18C00269846 /* SymbolPicker in Frameworks */ = {isa = PBXBuildFile; productRef = 34907F102CE5D18C00269846 /* SymbolPicker */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		34F3348A2CCED93800F266D8 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -24,14 +30,28 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		340DBA2E2CE82D0600B88EB3 /* ExecutorCreationSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExecutorCreationSheetView.swift; sourceTree = "<group>"; };
 		34F334792CCED93600F266D8 /* GizmoMK2.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GizmoMK2.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		34F334892CCED93800F266D8 /* GizmoMK2Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GizmoMK2Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		34F334932CCED93800F266D8 /* GizmoMK2UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GizmoMK2UITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		340D5C412CDD467F00F8A710 /* Exceptions for "GizmoMK2" folder in "GizmoMK2" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 34F334782CCED93600F266D8 /* GizmoMK2 */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		34F3347B2CCED93600F266D8 /* GizmoMK2 */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				340D5C412CDD467F00F8A710 /* Exceptions for "GizmoMK2" folder in "GizmoMK2" target */,
+			);
 			path = GizmoMK2;
 			sourceTree = "<group>";
 		};
@@ -52,6 +72,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				34907F112CE5D18C00269846 /* SymbolPicker in Frameworks */,
+				340D5C4B2CDD5F1500F8A710 /* SwiftUIIntrospect in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -75,6 +97,7 @@
 		34F334702CCED93600F266D8 = {
 			isa = PBXGroup;
 			children = (
+				340DBA2E2CE82D0600B88EB3 /* ExecutorCreationSheetView.swift */,
 				34F3347B2CCED93600F266D8 /* GizmoMK2 */,
 				34F3348C2CCED93800F266D8 /* GizmoMK2Tests */,
 				34F334962CCED93800F266D8 /* GizmoMK2UITests */,
@@ -112,6 +135,8 @@
 			);
 			name = GizmoMK2;
 			packageProductDependencies = (
+				340D5C4A2CDD5F1500F8A710 /* SwiftUIIntrospect */,
+				34907F102CE5D18C00269846 /* SymbolPicker */,
 			);
 			productName = GizmoMK2;
 			productReference = 34F334792CCED93600F266D8 /* GizmoMK2.app */;
@@ -195,6 +220,10 @@
 			);
 			mainGroup = 34F334702CCED93600F266D8;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				340D5C492CDD5E6D00F8A710 /* XCRemoteSwiftPackageReference "SwiftUI-Introspect" */,
+				34907F0F2CE5D13900269846 /* XCRemoteSwiftPackageReference "SymbolPicker" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 34F3347A2CCED93600F266D8 /* Products */;
 			projectDirPath = "";
@@ -236,6 +265,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				340DBA2F2CE82D0600B88EB3 /* ExecutorCreationSheetView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -396,13 +426,16 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"GizmoMK2/Preview Content\"";
+				DEVELOPMENT_TEAM = Z78FG6GVXZ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = GizmoMK2/Info.plist;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = Please;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -424,13 +457,16 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"GizmoMK2/Preview Content\"";
+				DEVELOPMENT_TEAM = Z78FG6GVXZ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = GizmoMK2/Info.plist;
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = Please;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -552,6 +588,38 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		340D5C492CDD5E6D00F8A710 /* XCRemoteSwiftPackageReference "SwiftUI-Introspect" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/siteline/SwiftUI-Introspect";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.3.0;
+			};
+		};
+		34907F0F2CE5D13900269846 /* XCRemoteSwiftPackageReference "SymbolPicker" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/xnth97/SymbolPicker";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.5.3;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		340D5C4A2CDD5F1500F8A710 /* SwiftUIIntrospect */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 340D5C492CDD5E6D00F8A710 /* XCRemoteSwiftPackageReference "SwiftUI-Introspect" */;
+			productName = SwiftUIIntrospect;
+		};
+		34907F102CE5D18C00269846 /* SymbolPicker */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 34907F0F2CE5D13900269846 /* XCRemoteSwiftPackageReference "SymbolPicker" */;
+			productName = SymbolPicker;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 34F334712CCED93600F266D8 /* Project object */;
 }

@@ -1,0 +1,24 @@
+{
+  "originHash" : "eb7787d6753599a1fbf2e8ea4c933078f745ff24b732824735bd23546b827bc0",
+  "pins" : [
+    {
+      "identity" : "swiftui-introspect",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/siteline/SwiftUI-Introspect",
+      "state" : {
+        "revision" : "807f73ce09a9b9723f12385e592b4e0aaebd3336",
+        "version" : "1.3.0"
+      }
+    },
+    {
+      "identity" : "symbolpicker",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/xnth97/SymbolPicker",
+      "state" : {
+        "revision" : "f82b64bcc3d761c9e63aaa10b1912bba72cbf6d8",
+        "version" : "1.5.3"
+      }
+    }
+  ],
+  "version" : 3
+}
