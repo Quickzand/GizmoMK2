@@ -27,6 +27,9 @@ struct ActionCreationView: View {
                 KeybindingCustomizationView
             case .siriShortcut:
                 shortcutCustomizationView
+            case .core:
+                EmptyView()
+                
             }
         }
         Button(action:{
@@ -177,15 +180,8 @@ struct ActionTypeButtonView : View {
             return "Keybinding"
         case .siriShortcut:
             return "Siri Shortcut"
-        }
-    }
-    
-    func actionTypeSystemImage() -> String {
-        switch displayedType {
-        case .keybind:
-            return "keyboard"
-        case .siriShortcut:
-            return "sparkles"
+        case .core:
+            return "Null"
         }
     }
 
@@ -197,7 +193,7 @@ struct ActionTypeButtonView : View {
             }
         }) {
             VStack {
-                Image(systemName: actionTypeSystemImage())
+                Image(systemName: displayedType.associatedIcon)
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                 Text(actionTypeString())

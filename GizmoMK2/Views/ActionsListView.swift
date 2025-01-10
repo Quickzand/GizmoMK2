@@ -12,7 +12,7 @@ struct ActionsListView: View {
     var body: some View {
         List {
             ForEach(appState.actions) { action in
-                ActionRow(action: action)
+                ActionRow(action: action, isSelected: false, onTap: {})
             }.onDelete(perform: {
                 let indexSet = $0
                 appState.deleteAction(id: appState.actions[indexSet.first!].id)
@@ -35,15 +35,6 @@ struct ActionsListView: View {
     }
 }
 
-
-struct ActionRow : View {
-    var action : ActionModel
-    var body : some View {
-        NavigationLink(destination: ActionCreationView(action: action, isEditing: true)) {
-            Text(action.name)
-        }
-    }
-}
 
 #Preview {
     ActionsListView().environmentObject(AppState())

@@ -10,62 +10,65 @@ import SwiftUI
 struct PageView: View {
     @EnvironmentObject var appState: AppState
     
-    
-    @State var newExecutor : ExecutorModel = ExecutorModel(label:"Default Label")
-    
-    var pageNum: Int
+    var page : PageModel
     
     // Layout customization variables
-    let columnSpacing: CGFloat = 10
-    let rowSpacing: CGFloat = 10
-    let gridPadding: CGFloat = 50
-    let cellCornerRadius: CGFloat = 8
-    let emptyCellBackgroundOpacity: Double = 0.1
-    let filledCellBackgroundOpacity: Double = 0.1
+    private let columnSpacing: CGFloat = 10
+    private let rowSpacing: CGFloat = 10
+    private let gridPadding: CGFloat = 50
+    private let cellCornerRadius: CGFloat = 8
+    private let emptyCellBackgroundOpacity: Double = 0.1
     
-    let columns = [
-        GridItem(.flexible(), spacing: 10),
-        GridItem(.flexible(), spacing: 10),
-        GridItem(.flexible(), spacing: 10)
-    ]
+    // Grid configuration
+    private var columns: [GridItem] {
+        Array(repeating: GridItem(.flexible(), spacing: columnSpacing), count: 3)
+    }
     
     var body: some View {
         GeometryReader { geometry in
-            // Calculate item width based on screen width and spacing
-            let itemWidth = (geometry.size.width - (gridPadding * 2 + columnSpacing * CGFloat(columns.count - 1))) / CGFloat(columns.count)
+            let itemWidth = calculateItemWidth(for: geometry.size.width)
+            let pageIndex = appState.pages.firstIndex(where: { $0.id == page.id }) ?? 0
             
             LazyVGrid(columns: columns, spacing: rowSpacing) {
-                ForEach(Array(Page.adjustExecutors(page:appState.pages[pageNum]).executors.enumerated()), id: \.offset) { index, executor in
-                    if let executor = executor {
-                        ExecutorView(executor: executor, itemWidth: itemWidth, cellCornerRadius:cellCornerRadius )
-                            .dropDestination(for: ExecutorModel.self) {executors, spatialPostion in
-                                guard let executor = executors.first else { return false }
-                                appState.swapExecutors(executorID: executor.id, pageID: appState.pages[pageNum].id, index: index)
-                                return true
-                            }
+                let executors = PageModel.adjustExecutors(page: page).executors
+                ForEach(Array(executors.enumerated()), id: \.offset) { index, executor in
+                    Group {
+                        if let executor = executor {
+                            ExecutorView(executor: executor, itemWidth: itemWidth, cellCornerRadius: cellCornerRadius)
+                        } else {
+                            emptyCellView(itemWidth: itemWidth)
+                        }
                     }
-                    else
- {
-                        Spacer()
-                            .frame(width: itemWidth, height: itemWidth)
-                            .background(appState.editMode ? Color.gray.opacity(emptyCellBackgroundOpacity) : Color.clear) // Light gray for empty cells
-                            .cornerRadius(cellCornerRadius)
-                            .dropDestination(for: ExecutorModel.self) {executors, spatialPostion in
-                                guard let executor = executors.first else { return false }
-                                appState.swapExecutors(executorID: executor.id, pageID: appState.pages[pageNum].id, index: index)
-                                return true
-                            }
+                    .dropDestination(for: ExecutorModel.self) { executors, _ in
+                        handleDrop(executors: executors, pageID: page.id, index: index)
                     }
                 }
             }
-            .padding(.horizontal, gridPadding) // Horizontal padding around the grid
+            .padding(.horizontal, gridPadding)
         }
-        .sheet(isPresented: $appState.executorCreationShown) {
-            ExecutorCreationSheetView()
-        }
+
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func calculateItemWidth(for totalWidth: CGFloat) -> CGFloat {
+        (totalWidth - (gridPadding * 2 + columnSpacing * CGFloat(columns.count - 1))) / CGFloat(columns.count)
+    }
+    
+    private func emptyCellView(itemWidth: CGFloat) -> some View {
+        Spacer()
+            .frame(width: itemWidth, height: itemWidth)
+            .background(appState.editMode ? Color.gray.opacity(emptyCellBackgroundOpacity) : Color.clear)
+            .cornerRadius(cellCornerRadius)
+    }
+    
+    private func handleDrop(executors: [ExecutorModel], pageID: String, index: Int) -> Bool {
+        guard let executor = executors.first else { return false }
+        appState.swapExecutors(executorID: executor.id, pageID: pageID, index: index)
+        return true
     }
 }
 
 #Preview {
-//    PageView(pageNum: 0).environmentObject(AppState())
+//    PageView().environmentObject(AppState())
 }

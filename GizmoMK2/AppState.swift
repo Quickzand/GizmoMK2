@@ -14,7 +14,7 @@ import Network
 class AppState: ObservableObject {
     @Published var foundHosts: [FoundHost] = []
     @Published var settings : Settings = Settings.load()
-    @Published var pages: [Page] = []
+    @Published var pages: [PageModel] = []
     @Published var actions : [ActionModel] = []
     @Published var currentPageID: String = "1"
     @Published var editMode : Bool = false
@@ -23,6 +23,10 @@ class AppState: ObservableObject {
     
     @Published var executorCreationShown : Bool = false
     @Published var executorCreationModel : ExecutorModel = ExecutorModel(label:"Default Label")
+    
+    @Published var focusedApp : AppInfoModel = .init(name: "", bundleID: "")
+    
+    @Published var appInfos : [AppInfoModel] = []
     
     
     
@@ -33,6 +37,18 @@ class AppState: ObservableObject {
     
     @Published public var connection: NWConnection?
     private var messageReceiver = MessageReceiver()
+    
+    func getCurrentRotation() -> Angle {
+        
+        switch self.deviceOrientation {
+        case .landscapeLeft:
+            return Angle(degrees: 90.0)
+        case .landscapeRight:
+            return Angle(degrees: -90.0)
+        default:
+            return Angle(degrees: 0.0)
+        }
+    }
     
     init() {
         bonjourService.$discoveredClients
@@ -86,6 +102,7 @@ class AppState: ObservableObject {
                 print("Connected to \(host.name) at \(host.hostName):\(host.port)")
                 self?.requestPages()
                 self?.requestActions()
+                self?.requestAppInfos()
             case .failed(let error):
                 print("Connection failed with error: \(error)")
                 self?.connection = nil
@@ -139,8 +156,24 @@ class AppState: ObservableObject {
     // Execute a specific action on the host
     func executeAction(actionID: String) {
         guard let connection = connection else { return }
-        let request = ExecuteActionRequest(actionID: actionID)
-        if let message = encodeMessage(type: .executeAction, payload: request) {
+        guard let action = actions.first(where: { $0.id == actionID }) else {return}
+            switch action.type {
+            case .siriShortcut:
+                executeShortcut(shortcut: action.shortcut)
+            default:
+                let request = ExecuteActionRequest(actionID: actionID)
+                if let message = encodeMessage(type: .executeAction, payload: request) {
+                    sendMessage(message, on: connection)
+                }
+            }
+            
+            
+    }
+    
+    func executeShortcut(shortcut: String) {
+        guard let connection = connection else { return }
+        let request = ExecuteShortcutRequest(shortcut: shortcut)
+        if let message = encodeMessage(type: .executeShortcut, payload: request) {
             sendMessage(message, on: connection)
         }
     }
@@ -159,6 +192,30 @@ class AppState: ObservableObject {
         guard let connection = connection else { return }
         let request = CreateExecutorRequest(executor: executor, pageID: pageID)
         if let message = encodeMessage(type: .createExecutor, payload: request) {
+            sendMessage(message, on: connection)
+        }
+    }
+    
+    func createPage(page: PageModel) {
+        guard let connection = connection else { return }
+        let request = CreatePageRequest(page: page)
+        if let message = encodeMessage(type: .createPage, payload: request) {
+            sendMessage(message, on: connection)
+        }
+    }
+    
+    func modifyPage(page: PageModel) {
+        guard let connection = connection else { return }
+        let request = ModifyPageRequest(page: page)
+        if let message = encodeMessage(type: .modifyPage, payload: request) {
+            sendMessage(message, on: connection)
+        }
+    }
+    
+    func deletePage(withID pageId : String) {
+        guard let connection = connection else { return }
+        let request = DeletePageRequest(pageID:  pageId)
+        if let message = encodeMessage(type: .deletePage, payload: request) {
             sendMessage(message, on: connection)
         }
     }
@@ -201,6 +258,22 @@ class AppState: ObservableObject {
         guard let connection = connection else { return }
         let request = SwapExecutorRequest(executorID: executorID, pageID: pageID, index: index)
         if let message = encodeMessage(type: .swapExecutor, payload: request) {
+            sendMessage(message, on: connection)
+        }
+    }
+    
+    func requestAppInfos() {
+        guard let connection = connection else { return }
+        let request = ListAppsRequest()
+        if let message = encodeMessage(type: .listApps, payload: request) {
+            sendMessage(message, on: connection)
+        }
+    }
+    
+    func updateAppInfo(appInfo: AppInfoModel) {
+        guard let connection = connection else {return}
+        let request = UpdateAppInfoRequest(appInfo: appInfo)
+        if let message = encodeMessage(type: .updateAppInfo, payload: request) {
             sendMessage(message, on: connection)
         }
     }
@@ -293,13 +366,18 @@ class AppState: ObservableObject {
                 if let response = message.decodePayload(as: ShortcutsListResponse.self) {
                     DispatchQueue.main.async {
                         self.shortcuts = response.shortcuts
+                        for shortcut in self.shortcuts {
+                            self.actions.append(ActionModel(name: shortcut, type: .siriShortcut))
+                        }
                         print("Shortcuts lsit updated with \(response.shortcuts.count) shortcuts.")
                     }
                 }
             case .actionsList:
                 if let response = message.decodePayload(as: ActionsListResponse.self) {
                     DispatchQueue.main.async {
+                        self.requestShortcuts()
                         self.actions = response.actions
+                        self.actions.append(contentsOf: coreActions)
                         print("Actions list updated with \(response.actions.count) actions.")
                     }
                 }
@@ -310,6 +388,7 @@ class AppState: ObservableObject {
             case .actionUpdated:
                 if let response = message.decodePayload(as: ActionUpdatedResponse.self) {
                     print("Action updated: \(response.success ? "Success" : "Failure")")
+                    requestActions()
                 }
             case .executorUpdated:
                 if let response = message.decodePayload(as: ExecutorUpdatedResponse.self) {
@@ -331,6 +410,24 @@ class AppState: ObservableObject {
                 if let response = message.decodePayload(as: ExecutorSwappedResponse.self) {
                     print("Executor swapped: \(response.success ? "Success" : "Failure")")
                     requestPages()
+                }
+            case .focusedAppUpdated:
+                if let request = message.decodePayload(as: FocusedAppUpdateRequest.self) {
+                    print("Focus app updated: \(request.appInfo)")
+                    self.focusedApp = request.appInfo
+                }
+            case .appsList:
+                if let response = message.decodePayload(as: AppsListResponse.self) {
+                    print("App list updated: ")
+                    print(response.appInfos)
+                    self.appInfos = response.appInfos
+                }
+            case .pageUpdated:
+                if let response = message.decodePayload(as: PageUpdatedResponse.self) {
+                    print("Page updated: \(response.success ? "Success" : "Failure")")
+                    if response.success {
+                        self.requestPages()
+                    }
                 }
             case .error:
                 if let errorMsg = message.decodePayload(as: ErrorMessage.self) {

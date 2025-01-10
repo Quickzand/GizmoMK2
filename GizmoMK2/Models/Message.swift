@@ -1,13 +1,13 @@
 //
 //  Message.swift
-//  GizmoMK2
+//  GizmoDesktopMK2
 //
 //  Created by Matthew Sand on 11/7/24.
 //
 
 import Foundation
 
-// Define message types for communication
+// Enum to differentiate message types
 enum MessageType: String, Codable {
     case listPages
     case pagesList
@@ -29,7 +29,18 @@ enum MessageType: String, Codable {
     case executorDeleted
     case swapExecutor
     case executorSwapped
+    case focusedAppUpdated
+    case listApps
+    case appsList
+    case createPage
+    case modifyPage
+    case deletePage
+    case pageUpdated
+    case updateAppInfo
+    case AppInfoUpdated
     case error
+    case executeShortcut
+    case shortcutExecuted
 }
 
 
@@ -46,7 +57,7 @@ struct ListPagesRequest: Codable { }
 
 // 2. PagesList (Host Response)
 struct PagesListResponse: Codable {
-    let pages: [Page]
+    let pages: [PageModel]
 }
 
 struct ListShortcutsRequest : Codable {
@@ -56,7 +67,9 @@ struct ShortcutsListResponse : Codable {
     let shortcuts: [String]
 }
 
-struct ListActionsRequest : Codable {}
+
+
+struct ListActionsRequest: Codable { }
 
 struct ActionsListResponse : Codable {
     let actions: [ActionModel]
@@ -67,9 +80,19 @@ struct ExecuteActionRequest: Codable {
     let actionID: String
 }
 
+struct ExecuteShortcutRequest : Codable {
+    let shortcut: String
+}
+
 // 4. ActionExecuted (Host Response)
 struct ActionExecutedResponse: Codable {
     let actionID: String
+    let success: Bool
+    let message: String?
+}
+
+struct ShortcutExecutedResponse : Codable {
+    let shortcut: String
     let success: Bool
     let message: String?
 }
@@ -81,21 +104,11 @@ struct CreateActionRequest: Codable {
 
 // 6. ModifyAction (Client Request)
 struct ModifyActionRequest: Codable {
-    let action : ActionModel
+    let action: ActionModel
 }
 
 // 7. ActionUpdated (Host Response)
 struct ActionUpdatedResponse: Codable {
-    let actionID: UUID
-    let success: Bool
-    let message: String?
-}
-
-struct DeleteActionRequest: Codable {
-    let actionID: String
-}
-
-struct ActionDeletedResponse: Codable {
     let actionID: String
     let success: Bool
     let message: String?
@@ -123,10 +136,19 @@ struct ExecutorDeletedResponse : Codable {
 }
 
 
+struct DeleteActionRequest: Codable {
+    let actionID: String
+}
 
 struct CreateExecutorRequest: Codable {
     let executor: ExecutorModel
     let pageID: String
+}
+
+struct ActionDeletedResponse: Codable {
+    let actionID: String
+    let success: Bool
+    let message: String?
 }
 
 struct SwapExecutorRequest: Codable {
@@ -141,11 +163,54 @@ struct ExecutorSwappedResponse : Codable {
     let message: String?
 }
 
+struct FocusedAppUpdateRequest : Codable {
+    let appInfo : AppInfoModel
+}
+
+struct ListAppsRequest : Codable {
+    
+}
+
+struct AppsListResponse : Codable {
+    let appInfos : [AppInfoModel]
+}
+
+struct CreatePageRequest : Codable {
+    let page : PageModel
+}
+
+struct ModifyPageRequest : Codable {
+    let page : PageModel
+}
+
+struct DeletePageRequest : Codable {
+    let pageID: String
+}
+
+struct PageUpdatedResponse : Codable {
+    let pageID: String
+    let success: Bool
+    let message: String?
+}
+
+struct UpdateAppInfoRequest : Codable {
+    let appInfo : AppInfoModel
+}
+
+struct AppInfoUpdatedResponse : Codable {
+    let appInfoID: String
+    let success: Bool
+    let message: String?
+}
+
+
+
 
 // 8. Error Message
 struct ErrorMessage: Codable {
     let message: String
 }
+
 
 // Utility class to handle message framing
 class MessageReceiver {

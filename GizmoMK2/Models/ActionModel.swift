@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 
 struct ActionModel : Codable, Identifiable, Hashable {
     var id : String
@@ -14,6 +15,7 @@ struct ActionModel : Codable, Identifiable, Hashable {
     var modifiers : [ModifierButton : Bool]
     var key : String
     var shortcut : String
+    var coreActionType : CoreActionType
     
     enum CodingKeys: String, CodingKey {
           case id
@@ -22,6 +24,7 @@ struct ActionModel : Codable, Identifiable, Hashable {
         case modifiers
         case key
         case shortcut
+        case coreActionType
       }
 
       public init(from decoder: Decoder) throws {
@@ -32,15 +35,17 @@ struct ActionModel : Codable, Identifiable, Hashable {
           modifiers = try container.decodeIfPresent([ModifierButton : Bool].self, forKey: .modifiers) ?? [:]
           key = try container.decodeIfPresent(String.self, forKey: .key) ?? ""
           shortcut = try container.decodeIfPresent(String.self, forKey: .shortcut) ?? ""
+          coreActionType = try container.decodeIfPresent(CoreActionType.self, forKey: .coreActionType) ?? .nextSong
       }
 
-    public init(id: String = UUID().uuidString,name: String = "DefaultID",  type: ActionType = .keybind, modifiers : [ModifierButton : Bool] = [:], key : String = "", shortcut : String = "") {
+    public init(id: String = UUID().uuidString,name: String = "DefaultID",  type: ActionType = .keybind, modifiers : [ModifierButton : Bool] = [:], key : String = "", shortcut : String = "", coreActionType : CoreActionType = .nextSong) {
           self.id = id
           self.name = name
         self.type = type
         self.modifiers = modifiers
         self.key = key
         self.shortcut = shortcut
+        self.coreActionType = coreActionType
       }
 }
 
@@ -56,4 +61,46 @@ enum ModifierButton : Codable, Equatable {
 enum ActionType : Codable {
     case keybind
     case siriShortcut
+    case core
+    
+    static func < (lhs: ActionType, rhs: ActionType) -> Bool {
+        switch (lhs, rhs) {
+        case (.keybind, .siriShortcut):
+            return true
+        default:
+            return false
+        }
+    }
+    
+    var associatedColor: Color {
+        switch self {
+        case .keybind:
+            return Color("PrimaryAccentColor")
+        case .siriShortcut:
+            return Color("TertiaryAccentColor")
+        case .core:
+            return Color("SecondaryAccentColor")
+        }
+    }
+    
+    var associatedIcon : String {
+        switch self {
+        case .keybind:
+            return "keyboard"
+        case .siriShortcut:
+            return "sparkles"
+        case .core:
+            return "bolt.fill"
+        }
+    }
 }
+
+enum CoreActionType : Codable {
+    case nextSong
+    case previousSong
+}
+
+
+
+let nextSongAction = ActionModel(name: "Next Song", type: .core, coreActionType: .nextSong)
+let coreActions : [ActionModel] = [nextSongAction]

@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		340D5C4B2CDD5F1500F8A710 /* SwiftUIIntrospect in Frameworks */ = {isa = PBXBuildFile; productRef = 340D5C4A2CDD5F1500F8A710 /* SwiftUIIntrospect */; };
-		340DBA2F2CE82D0600B88EB3 /* ExecutorCreationSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 340DBA2E2CE82D0600B88EB3 /* ExecutorCreationSheetView.swift */; };
 		34907F112CE5D18C00269846 /* SymbolPicker in Frameworks */ = {isa = PBXBuildFile; productRef = 34907F102CE5D18C00269846 /* SymbolPicker */; };
 /* End PBXBuildFile section */
 
@@ -30,7 +29,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		340DBA2E2CE82D0600B88EB3 /* ExecutorCreationSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExecutorCreationSheetView.swift; sourceTree = "<group>"; };
 		34F334792CCED93600F266D8 /* GizmoMK2.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GizmoMK2.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		34F334892CCED93800F266D8 /* GizmoMK2Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GizmoMK2Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		34F334932CCED93800F266D8 /* GizmoMK2UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GizmoMK2UITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -97,7 +95,6 @@
 		34F334702CCED93600F266D8 = {
 			isa = PBXGroup;
 			children = (
-				340DBA2E2CE82D0600B88EB3 /* ExecutorCreationSheetView.swift */,
 				34F3347B2CCED93600F266D8 /* GizmoMK2 */,
 				34F3348C2CCED93800F266D8 /* GizmoMK2Tests */,
 				34F334962CCED93800F266D8 /* GizmoMK2UITests */,
@@ -265,7 +262,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				340DBA2F2CE82D0600B88EB3 /* ExecutorCreationSheetView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
