@@ -42,7 +42,9 @@ struct HomeView: View {
                 // sync it back to appState.currentPageID.
                 .onChange(of: localPageID) { newValue in
                     if newValue != appState.currentPageID {
-                        appState.currentPageID = newValue
+                        withAnimation(.easeInOut(duration: 0.3)) { // Add animation here
+                              appState.currentPageID = newValue
+                          }
                     }
                 }
                 // Also, whenever appState.currentPageID changes (via code),
@@ -97,7 +99,24 @@ struct HomeView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(BackgroundView())
+        .background(
+            Group {
+                if let currentPage = appState.pages.first(where: { $0.id == appState.currentPageID }) {
+                    switch currentPage.backgroundType {
+                    case .color:
+                        Color(hex: currentPage.backgroundColor)
+                    case .mesh:
+                        BackgroundView()
+                    default:
+                        EmptyView()
+                        
+                    }
+                } else {
+                    EmptyView()
+                }
+            }
+                .ignoresSafeArea()
+        )
         .onAppear {
             // Initialize localPageID so it shows the right tab from the start
             localPageID = appState.currentPageID
@@ -118,9 +137,16 @@ extension HomeView {
         HStack {
             VStack(alignment: .leading) {
                 // “+” Button: show Executor creation sheet
-                Button {
-                    appState.executorCreationModel = ExecutorModel(label: "Default Label")
-                    appState.executorCreationShown = true
+                Menu {
+                    Button("New Executor") {
+                        appState.executorCreationModel = ExecutorModel(label: "Default Label")
+                        appState.executorCreationShown = true
+                    }
+                    
+                    
+                    Button("New Page") {
+                        appState.pageCreationShown = true
+                    }
                 } label: {
                     Image(systemName: "plus")
                         .resizable()
@@ -158,6 +184,9 @@ extension HomeView {
         .sheet(isPresented: $appState.executorCreationShown) {
             ExecutorCreationSheetView()
         }
+        .sheet(isPresented: $appState.pageCreationShown) {
+            PageCreationSheetView()
+        }
     }
     
     @ViewBuilder
@@ -190,6 +219,7 @@ extension HomeView {
                     }
                 }
                 .frame(maxWidth: .infinity, minHeight: 20, maxHeight: 20)
+                .opacity(appState.pages.first(where: { $0.id == appState.currentPageID })?.nameVisible == true ? 1 : 0)
         }
     }
 }

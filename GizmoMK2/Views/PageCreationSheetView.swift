@@ -16,6 +16,7 @@ struct PageCreationBackgroundLayer: View {
     @State private var flickerAmount: CGFloat = 0.0
     @State private var gradientShift: CGFloat = 0.0
     
+    
     var body: some View {
         // Define a different mesh arrangement
         let points: [SIMD2<Float>] = [
@@ -85,7 +86,8 @@ struct PageCreationBackgroundLayer: View {
 
 struct PageCreationSheetView : View {
     @EnvironmentObject var appState : AppState
-    @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
+    @Environment(\.dismiss) private var dismiss
+    @State private var selectedBackgroundColor : Color = .black
     
     @State var page = PageModel(name: "New Page")
     var isEditing : Bool = false
@@ -98,9 +100,39 @@ struct PageCreationSheetView : View {
             VStack {
                 ScrollView([.vertical]) {
                     Section {
-                        TextField("Page Name", text: $page.name)
+                        HStack {
+                            Button {
+                                page.nameVisible.toggle()
+                            } label: {
+                                Image(systemName: page.nameVisible ? "eye.fill" : "eye.slash.fill")
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 20, height: 20)
+                                    
+                            }
+                            .padding()
+                            .background(.ultraThinMaterial)
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                            TextField("Page Name", text: $page.name)
+                                .padding()
+                                .background(.ultraThinMaterial)
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                                
+                        }
+                        .padding()
+                        .foregroundStyle(.primary)
                     }
+                    
+                    Section("Background") {
+                        backgroundSelection
+                            .padding()
+                            .background(.ultraThinMaterial)
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                            .padding()
+                    }
+                    
                 }
+                .padding(.top)
                 
                 SubmitButton(submissionAnimation: .constant(false)) {
                     if(isEditing) {
@@ -110,10 +142,50 @@ struct PageCreationSheetView : View {
                         appState.createPage(page: page)
                     }
                     appState.editMode = false
-                    self.presentationMode.wrappedValue.dismiss()
+                    dismiss()
                 }
             }
+        }
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") {
+                    dismiss()
+                }
+            }
+        }
+    }
+}
+
+
+
+// MARK: Background Selection
+extension PageCreationSheetView {
+    
+    
+    @ViewBuilder
+    private var backgroundSelection: some View {
+        VStack {
+            Picker("Background", selection: $page.backgroundType) {
+                ForEach(PageBackgroundType.allCases, id: \.self) { backgroundType in
+                    Text(backgroundType.rawValue)
+                        .tag(backgroundType)
+                }
+            }
+            .pickerStyle(.segmented)
             
+            switch page.backgroundType {
+            case .color:
+                ColorPicker("Color", selection: $selectedBackgroundColor, supportsOpacity: false)
+                    .onAppear {
+                        selectedBackgroundColor = .init(hex: page.backgroundColor)
+                    }
+                    .onChange(of: selectedBackgroundColor) {
+                        page.backgroundColor = selectedBackgroundColor.toHex() ?? "#000"
+                        print(page.backgroundColor)
+                    }
+            default:
+                EmptyView()
+            }
         }
         
     }
