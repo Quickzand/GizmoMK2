@@ -73,7 +73,10 @@ struct HomeView: View {
                         Spacer()
                         VStack {
                             Spacer()
-                            NavigationLink(destination: PageCreationSheetView(page: currentPage, isEditing: true)) {
+                            Button {
+                                appState.pageCreationModel = currentPage
+                                appState.pageCreationShown = true
+                            } label: {
                                 Image(systemName: "paintbrush.fill")
                                     .resizable()
                                     .frame(width: buttonSize, height: buttonSize)
@@ -145,6 +148,7 @@ extension HomeView {
                     
                     
                     Button("New Page") {
+                        appState.pageCreationModel = PageModel()
                         appState.pageCreationShown = true
                     }
                 } label: {
@@ -276,4 +280,11 @@ struct LazyView<Content: View>: View {
 #Preview {
     HomeView().environmentObject(AppState())
 }
+
+
+
+
+
+
+
 

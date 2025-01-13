@@ -88,8 +88,7 @@ struct PageCreationSheetView : View {
     @EnvironmentObject var appState : AppState
     @Environment(\.dismiss) private var dismiss
     @State private var selectedBackgroundColor : Color = .black
-    
-    @State var page = PageModel(name: "New Page")
+
     var isEditing : Bool = false
     
     
@@ -102,9 +101,9 @@ struct PageCreationSheetView : View {
                     Section {
                         HStack {
                             Button {
-                                page.nameVisible.toggle()
+                                appState.pageCreationModel.nameVisible.toggle()
                             } label: {
-                                Image(systemName: page.nameVisible ? "eye.fill" : "eye.slash.fill")
+                                Image(systemName: appState.pageCreationModel.nameVisible ? "eye.fill" : "eye.slash.fill")
                                     .resizable()
                                     .aspectRatio(contentMode: .fit)
                                     .frame(width: 20, height: 20)
@@ -113,7 +112,7 @@ struct PageCreationSheetView : View {
                             .padding()
                             .background(.ultraThinMaterial)
                             .clipShape(RoundedRectangle(cornerRadius: 10))
-                            TextField("Page Name", text: $page.name)
+                            TextField("Page Name", text: $appState.pageCreationModel.name)
                                 .padding()
                                 .background(.ultraThinMaterial)
                                 .clipShape(RoundedRectangle(cornerRadius: 10))
@@ -136,10 +135,10 @@ struct PageCreationSheetView : View {
                 
                 SubmitButton(submissionAnimation: .constant(false)) {
                     if(isEditing) {
-                        appState.modifyPage(page:page)
+                        appState.modifyPage(page:appState.pageCreationModel)
                     }
                     else {
-                        appState.createPage(page: page)
+                        appState.createPage(page: appState.pageCreationModel)
                     }
                     appState.editMode = false
                     dismiss()
@@ -165,7 +164,7 @@ extension PageCreationSheetView {
     @ViewBuilder
     private var backgroundSelection: some View {
         VStack {
-            Picker("Background", selection: $page.backgroundType) {
+            Picker("Background", selection: $appState.pageCreationModel.backgroundType) {
                 ForEach(PageBackgroundType.allCases, id: \.self) { backgroundType in
                     Text(backgroundType.rawValue)
                         .tag(backgroundType)
@@ -173,15 +172,15 @@ extension PageCreationSheetView {
             }
             .pickerStyle(.segmented)
             
-            switch page.backgroundType {
+            switch appState.pageCreationModel.backgroundType {
             case .color:
                 ColorPicker("Color", selection: $selectedBackgroundColor, supportsOpacity: false)
                     .onAppear {
-                        selectedBackgroundColor = .init(hex: page.backgroundColor)
+                        selectedBackgroundColor = .init(hex: appState.pageCreationModel.backgroundColor)
                     }
                     .onChange(of: selectedBackgroundColor) {
-                        page.backgroundColor = selectedBackgroundColor.toHex() ?? "#000"
-                        print(page.backgroundColor)
+                        appState.pageCreationModel.backgroundColor = selectedBackgroundColor.toHex() ?? "#000"
+                        print(appState.pageCreationModel.backgroundColor)
                     }
             default:
                 EmptyView()

@@ -25,10 +25,21 @@ struct ExecutorView: View {
     // State variables to track the notches
     @State private var lastNotchIndex: Int = 0
     @State private var lastActionNotchIndex: Int = 0 // Variable for action notch index
+    
+    @State private var isPressed : Bool = false
+    
+    @State private var showDeleteConfirmation = false
+    
+    @State private var successCount : Int = 0
+    
 
     var buttonView: some View {
         Button(action: {
             appState.executeAction(actionID: executor.actionID)
+            
+            successCount += 1
+
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
         }) {
             ZStack {
                 VStack {
@@ -44,13 +55,70 @@ struct ExecutorView: View {
                     }
                 }.foregroundStyle(Color(hex: executor.foregroundColor))
             }
+            .simultaneousGesture (
+                DragGesture(minimumDistance: 0).onChanged { _ in
+                    withAnimation(.spring) {
+                        isPressed = true
+                    }
+                }.onEnded
+                {_ in
+                    withAnimation(.spring) {
+                        isPressed = false
+                    }
+                }
+            )
             .padding(.all, 2)
             .frame(width: itemWidth, height: itemWidth)
             .background(Color(hex: executor.backgroundColor).opacity(executor.backgroundOpacity))
             .cornerRadius(cellCornerRadius)
             .shadow(color:Color(hex:executor.foregroundColor).opacity(0.3), radius: 10)
             .shadow(radius:15)
+            .scaleEffect(isPressed ? 0.85 : 1.0)
+            .keyframeAnimator(
+                initialValue: RingProgress(innerRingProgress: 0, outerRingProgress: 0),
+                trigger: successCount
+            ) { content, value in
+                content
+                    .overlay {
+                        RadialGradient(
+                            gradient: Gradient(stops: [
+                                // Stop 1: Clear at 0.0
+                                .init(color: .clear, location: 0.0),
+                                
+                                // Stop 2: Accent color at "innerRingProgress"
+                                .init(color: .primaryAccent, location: value.innerRingProgress),
+                                
+                                // Stop 3: Clear at "outerRingProgress"
+                                .init(color: .clear, location: value.outerRingProgress)
+                            ]),
+                            center: .center,
+                            startRadius: 0,
+                            endRadius: itemWidth
+                        )
+                        .cornerRadius(cellCornerRadius)
+                    }
+            } keyframes: {_ in 
+                KeyframeTrack(\.innerRingProgress) {
+                    // Go from 0 to 1, then back to 0
+                    LinearKeyframe(0.0, duration: 0.01)
+                    LinearKeyframe(0.0, duration: 0.25)
+                    CubicKeyframe(10.0, duration: 2.0)
+                }
+                
+                KeyframeTrack(\.outerRingProgress) {
+                    // Go from 0 to 1, then back to 0
+                    LinearKeyframe(0.0, duration: 0.01)
+                    CubicKeyframe(1.0, duration: 0.5)
+                    LinearKeyframe(1.0, duration: 2)
+                    LinearKeyframe(0.0, duration: 0.01)
+                }
+            }
         }
+    }
+    
+    struct RingProgress {
+        var innerRingProgress: CGFloat
+        var outerRingProgress: CGFloat
     }
 
     var knobView: some View {
@@ -181,10 +249,18 @@ struct ExecutorView: View {
             .frame(width: itemWidth, height: itemWidth)
             .background(
                 ZStack {
+                    
+                    Circle()
+                        .fill(.primaryAccent)
+                        .frame(width:100, height:100)
+                        .blur(radius:30)
                     // Your existing background color
                     Color(hex: executor.backgroundColor).opacity(executor.backgroundOpacity)
+                   
                     // The grid overlay
                     GridBackground(lineSpacing: 10, lineColor: Color(hex:executor.foregroundColor).opacity(0.15))
+                    
+                    
                 }
             )
             .cornerRadius(cellCornerRadius)
@@ -240,13 +316,14 @@ struct ExecutorView: View {
 
                     // Delete button
                     Button(action: {
-                        appState.deleteExecutor(id: executor.id)
+                        showDeleteConfirmation = true
                     }) {
                         Image(systemName: "x.circle.fill")
                             .padding()
                     }
                     .position(CGPoint(x: 0, y: 0))
                     .offset(x: 5, y: 5)
+                    .foregroundStyle(.primary)
                 }
             }
         }
@@ -259,6 +336,16 @@ struct ExecutorView: View {
                 scale = 1
             }
         }
+        .alert("Delete Executor?", isPresented: $showDeleteConfirmation) {
+                   Button("Delete", role: .destructive) {
+                       appState.deleteExecutor(id: executor.id) // Perform delete action
+                   }
+                   Button("Cancel", role: .cancel) {
+                       showDeleteConfirmation = false // Dismiss the alert
+                   }
+               } message: {
+                   Text("Are you sure you want to delete this executor? This action cannot be undone.")
+               }
     }
 
     var body: some View {
@@ -298,6 +385,6 @@ struct GridBackground: View {
 }
 
 #Preview {
-    ExecutorView(executor: ExecutorModel(label: "Volume", interactionType: .gesture, icon: "speaker.wave.2.fill", backgroundColor: "#FAFAFA"))
+    ExecutorView(executor: ExecutorModel(label: "Volume", interactionType: .button, icon: "speaker.wave.2.fill", backgroundColor: "#FAFAFA"))
         .environmentObject(AppState())
 }

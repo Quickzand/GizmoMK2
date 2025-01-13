@@ -252,6 +252,23 @@ struct BackgroundSectionView: View {
                 }
                 HStack {
                     PhotosPicker("Background Image", selection: $selectedPhoto)
+                        .onChange(of: selectedPhoto) { newValue in
+                            Task {
+                                if let selectedPhoto = selectedPhoto { // Safely unwrap the optional
+                                    if let image = try? await selectedPhoto.loadTransferable(type: Data.self) {
+                                        appState.executorCreationModel.backgroundImageData = image
+                                    }
+                                }
+                            }
+                        }
+                    
+                    if let image = UIImage(data:appState.executorCreationModel.backgroundImageData) {
+                        Image(uiImage: image)
+                            .resizable()
+                                   .aspectRatio(contentMode: .fit)
+                                   .frame(width: 200, height: 200) 
+                    }
+                    
                 }
                 HStack {
                     Text("Opacity:")

@@ -39,9 +39,10 @@ struct PagesListView: View {
 struct PageRow : View {
     var page : PageModel
     var body : some View {
-        NavigationLink(destination: PageCreationSheetView(page: page, isEditing: true)) {
-            Text(page.name)
-        }
+        Text(page.name)
+//        NavigationLink(destination: PageCreationSheetView(page: page, isEditing: true)) {
+//            Text(page.name)
+//        }
     }
 }
 

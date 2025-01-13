@@ -29,6 +29,9 @@ struct ExecutorModel : Identifiable, Codable, Transferable {
     var backgroundColor : String
     var foregroundColor : String
     var backgroundOpacity : Double
+    var backgroundImageData : Data
+    
+    
     var iconHidden : Bool
     
     enum CodingKeys: String, CodingKey {
@@ -47,7 +50,7 @@ struct ExecutorModel : Identifiable, Codable, Transferable {
         case backgroundColor
         case foregroundColor
         case backgroundOpacity
-        
+        case backgroundImageData
       }
     
 
@@ -69,6 +72,7 @@ struct ExecutorModel : Identifiable, Codable, Transferable {
           backgroundColor = try container.decodeIfPresent(String.self, forKey: .backgroundColor) ?? "#000000"
           foregroundColor = try container.decodeIfPresent(String.self, forKey: .foregroundColor) ?? "#FFFFFF"
           backgroundOpacity = try container.decodeIfPresent(Double.self, forKey: .backgroundOpacity) ?? 1
+          backgroundImageData = try container.decodeIfPresent(Data.self, forKey: .backgroundImageData) ?? Data()
           
       }
 
@@ -88,6 +92,7 @@ struct ExecutorModel : Identifiable, Codable, Transferable {
         self.foregroundColor = foregroundColor
         self.backgroundOpacity = backgroundOpacity
         self.iconHidden = iconHidden
+        self.backgroundImageData = Data()
       }
     
     static var defaultValue : ExecutorModel {

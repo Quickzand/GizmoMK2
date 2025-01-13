@@ -24,6 +24,7 @@ class AppState: ObservableObject {
     @Published var executorCreationShown : Bool = false
     @Published var executorCreationModel : ExecutorModel = ExecutorModel(label:"Default Label")
     
+    @Published var pageCreationModel : PageModel = PageModel()
     @Published var pageCreationShown : Bool = false
     
     @Published var focusedApp : AppInfoModel = .init(name: "", bundleID: "")
