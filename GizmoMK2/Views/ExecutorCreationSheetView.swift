@@ -16,13 +16,6 @@ struct ExecutorCreationSheetView: View {
     @EnvironmentObject var appState: AppState
     
     @State private var iconPickerPresented = false
-    @State private var actionPickerPresented = false
-    @State private var secondaryActionPickerPresented = false
-    
-    @State private var upActionPickerPresented = false
-    @State private var downActionPickerPresented = false
-    @State private var leftActionPickerPresented = false
-    @State private var rightActionPickerPresented = false
     
     @State private var selectedPhoto: PhotosPickerItem? = nil
     
@@ -55,13 +48,7 @@ struct ExecutorCreationSheetView: View {
                         view.opacity(transition.isIdentity ? 1 : 0)
                         .scaleEffect(transition.isIdentity ? 1 : 0)
                     }
-                    ActionSectionView(
-                        actionPickerPresented: $actionPickerPresented, secondaryActionPickerPresented: $secondaryActionPickerPresented, upActionPickerPresented: $upActionPickerPresented, downActionPickerPresented: $downActionPickerPresented, leftActionPickerPresented: $leftActionPickerPresented, rightActionPickerPresented: $rightActionPickerPresented
-                    )
-                    .scrollTransition(.animated.threshold(.visible(1))) { view, transition in
-                        view.opacity(transition.isIdentity ? 1 : 0)
-                        .scaleEffect(transition.isIdentity ? 1 : 0)
-                    }
+                    ActionSectionView()
                 }
                 
                 .opacity(submissionAnimation ? 0 : 1)
@@ -93,24 +80,6 @@ struct ExecutorCreationSheetView: View {
         }
         .sheet(isPresented: $iconPickerPresented) {
             SymbolPicker(symbol: $appState.executorCreationModel.icon)
-        }
-        .sheet(isPresented: $actionPickerPresented) {
-            ActionPickerView(selectedActionId: $appState.executorCreationModel.actionID)
-        }
-        .sheet(isPresented: $secondaryActionPickerPresented) {
-            ActionPickerView(selectedActionId: $appState.executorCreationModel.secondaryActionID)
-        }
-        .sheet(isPresented: $upActionPickerPresented) {
-            ActionPickerView(selectedActionId: $appState.executorCreationModel.upActionID)
-        }
-        .sheet(isPresented: $downActionPickerPresented) {
-            ActionPickerView(selectedActionId: $appState.executorCreationModel.downActionID)
-        }
-        .sheet(isPresented: $leftActionPickerPresented) {
-            ActionPickerView(selectedActionId: $appState.executorCreationModel.leftActionID)
-        }
-        .sheet(isPresented: $rightActionPickerPresented) {
-            ActionPickerView(selectedActionId: $appState.executorCreationModel.rightActionID)
         }
     }
     
@@ -284,110 +253,78 @@ struct BackgroundSectionView: View {
 
 struct ActionSectionView: View {
     @EnvironmentObject var appState: AppState
-    @Binding var actionPickerPresented: Bool
-    @Binding var secondaryActionPickerPresented: Bool
-    @Binding var upActionPickerPresented: Bool
-    @Binding var downActionPickerPresented: Bool
-    @Binding var leftActionPickerPresented: Bool
-    @Binding var rightActionPickerPresented: Bool
     
     
-    var body: some View {
-        Section(header: Text("Action")) {
-            VStack {
-                switch appState.executorCreationModel.interactionType {
-                    case .button, .knob:
+    struct ActionPickerView : View {
+        var label : String
+        @Binding var associatedAction : ActionModel
+        @State var associatedActionPickerPresented: Bool = false
+        
+        
+        @EnvironmentObject var appState : AppState
+        @State var tempDestinationPageId : String = ""
+        
+        
+        var body : some View {
+            Section(header: Text(label)) {
+                VStack {
+                    HStack {
                         Button {
-                            actionPickerPresented = true
+                            associatedActionPickerPresented = true
                         } label: {
                             HStack {
-                                Text("Action: ")
+                                Text("Action Type: ")
                                 Spacer()
-                                if let action = appState.actions.first(where: { $0.id == appState.executorCreationModel.actionID }) {
-                                    Image(systemName: action.type.associatedIcon)
-                                    Text(action.name)
-                                }
-                            }
-                        }
-                        .foregroundStyle(.primary)
-                        
-                        if appState.executorCreationModel.interactionType == .knob {
-                            Button {
-                                secondaryActionPickerPresented = true
-                            } label: {
-                                HStack {
-                                    Text("Secondary Action: ")
-                                    Spacer()
-                                    if let action = appState.actions.first(where: { $0.id == appState.executorCreationModel.secondaryActionID }) {
-                                        Image(systemName: action.type.associatedIcon)
-                                        Text(action.name)
-                                    }
-                                }
-                            }
-                            .foregroundStyle(.primary)
-                        }
-                case .gesture:
-                    Button {
-                        upActionPickerPresented = true
-                    } label: {
-                        HStack {
-                            Text("Up Action: ")
-                            Spacer()
-                            if let action = appState.actions.first(where: { $0.id == appState.executorCreationModel.upActionID }) {
-                                Image(systemName: action.type.associatedIcon)
-                                Text(action.name)
+                                Image(systemName: associatedAction.type.category.associatedIcon)
+                                Text(associatedAction.type == .siriShortcut ? associatedAction.shortcut :  associatedAction.type.rawValue)
                             }
                         }
                     }
-                    .foregroundStyle(.primary)
-                    Button {
-                        downActionPickerPresented = true
-                    } label: {
+                    if associatedAction.type == .keybind {
                         HStack {
-                            Text("Down Action: ")
-                            Spacer()
-                            if let action = appState.actions.first(where: { $0.id == appState.executorCreationModel.downActionID }) {
-                                Image(systemName: action.type.associatedIcon)
-                                Text(action.name)
-                            }
+                            
                         }
                     }
-                    .foregroundStyle(.primary)
-                    Button {
-                        leftActionPickerPresented = true
-                    } label: {
-                        HStack {
-                            Text("Left Action: ")
-                            Spacer()
-                            if let action = appState.actions.first(where: { $0.id == appState.executorCreationModel.leftActionID }) {
-                                Image(systemName: action.type.associatedIcon)
-                                Text(action.name)
-                            }
-                        }
-                    }
-                    .foregroundStyle(.primary)
-                    Button {
-                        rightActionPickerPresented = true
-                    } label: {
-                        HStack {
-                            Text("Right Action: ")
-                            Spacer()
-                            if let action = appState.actions.first(where: { $0.id == appState.executorCreationModel.rightActionID }) {
-                                Image(systemName: action.type.associatedIcon)
-                                Text(action.name)
-                            }
-                        }
-                    }
-                    .foregroundStyle(.primary)
-                
+                    //                        if associatedAction.type == .core && associatedAction.coreActionType == .goToPage {
+                    //                            Picker("Page", selection: $associatedAction.destinationPageId) {
+                    //                                ForEach (appState.pages) { page in
+                    //                                    Text(page.name).tag(page.id)
+                    //                                }
+                    //                            }
+                    //                }
                     
-                    
-                }
-               
+                } .foregroundStyle (.primary)
+                   
             }
             .padding()
             .background(.thinMaterial)
             .cornerRadius(10)
+            .sheet(isPresented: $associatedActionPickerPresented) {
+                ActionTypePickerView(action: $associatedAction)
+            }
+            .scrollTransition(.animated.threshold(.visible(1))) { view, transition in
+                view.opacity(transition.isIdentity ? 1 : 0)
+                .scaleEffect(transition.isIdentity ? 1 : 0)
+            }
+        }
+    }
+    
+    var body: some View {
+            VStack {
+                switch appState.executorCreationModel.interactionType {
+                    case .button, .knob:
+                        ActionPickerView(label: "Action", associatedAction: $appState.executorCreationModel.action)
+                        
+                        if appState.executorCreationModel.interactionType == .knob {
+                            ActionPickerView(label:"Secondary Action", associatedAction: $appState.executorCreationModel.secondaryAction)
+                        }
+                case .gesture:
+                    EmptyView()
+                    ActionPickerView(label:"Up Action", associatedAction: $appState.executorCreationModel.upAction)
+                    ActionPickerView(label:"Down Action", associatedAction: $appState.executorCreationModel.downAction)
+                    ActionPickerView(label:"Left Action", associatedAction: $appState.executorCreationModel.leftAction)
+                    ActionPickerView(label:"Right Action", associatedAction: $appState.executorCreationModel.rightAction)
+                }
         }
     }
 }

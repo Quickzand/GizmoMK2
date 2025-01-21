@@ -7,6 +7,17 @@
 
 import SwiftUI
 
+
+
+struct AbstractedActionTypeDescriptor : Hashable {
+    
+    var actionType : ActionType
+    var siriShortcut : String = ""
+    
+   
+}
+
+
 // MARK: - Background Layer
 struct ActionPickerBackgroundLayer: View {
     // Animation states
@@ -101,7 +112,7 @@ struct IconView: View {
 
 // MARK: - FilterButton
 struct FilterButton: View {
-    let actionType: ActionType
+    let actionCategory: ActionCategory
     let isSelected: Bool
     let label: String
     let onTap: () -> Void
@@ -109,7 +120,7 @@ struct FilterButton: View {
     var body: some View {
         Button(action: onTap) {
             HStack {
-                Image(systemName: actionType.associatedIcon)
+                Image(systemName: actionCategory.associatedIcon)
                     .resizable()
                     .scaledToFit()
                     .frame(width: 16, height: 16)
@@ -118,7 +129,7 @@ struct FilterButton: View {
             .padding()
             .background(
                 isSelected
-                    ? actionType.associatedColor.opacity(0.2)
+                    ? actionCategory.associatedColor.opacity(0.2)
                     : Color.clear
             )
             .cornerRadius(20)
@@ -128,47 +139,62 @@ struct FilterButton: View {
 }
 
 // MARK: - ActionRow
-struct ActionRow: View {
-    let action: ActionModel
+struct ActionTypeRow: View {
+    let actionTypeDescriptor: AbstractedActionTypeDescriptor
     let isSelected: Bool
     let onTap: () -> Void
     
     var body: some View {
         Button(action: onTap) {
             HStack {
-                IconView(systemName: action.type.associatedIcon,
-                         color: action.type.associatedColor)
-                Text(action.name)
+                IconView(systemName: actionTypeDescriptor.actionType.category.associatedIcon,
+                         color: actionTypeDescriptor.actionType.category.associatedColor)
+                if actionTypeDescriptor.actionType == .siriShortcut {
+                    Text(actionTypeDescriptor.siriShortcut)
+                }
+                else {
+                    Text(actionTypeDescriptor.actionType.rawValue)
+                }
                 Spacer()
             }
         }
         .buttonStyle(BorderedButtonStyle())
         .foregroundStyle(.primary)
         .padding(.horizontal)
-        .shadow(color: isSelected ? action.type.associatedColor : .clear,
+        .shadow(color: isSelected ? actionTypeDescriptor.actionType.category.associatedColor : .clear,
                 radius: 3)
     }
 }
 
 // MARK: - ActionPickerView
-struct ActionPickerView: View {
+struct ActionTypePickerView: View {
     @EnvironmentObject var appState: AppState
     
-    @Binding var selectedActionId: String
+    @Binding var action: ActionModel
     @Environment(\.dismiss) private var dismiss
     @State private var searchText = ""
-    @State private var selectedFilter: ActionType? = nil
+    @State private var selectedFilter: ActionCategory? = nil
     
-    var filteredActions: [ActionModel] {
-        var filtered = appState.actions.filter { action in
-            let matchesSearch = searchText.isEmpty
-                || action.name.lowercased().contains(searchText.lowercased())
+    
+    var filteredTypes : [AbstractedActionTypeDescriptor] {
+        var descriptiveTypes : [AbstractedActionTypeDescriptor] = []
+        let allTypes : [ActionType] = ActionType.allCases.filter {$0 != .siriShortcut}
+        for type in allTypes {
+            descriptiveTypes.append(.init(actionType: type))
+        }
+//        Add on extra ones for all siri shortcuts
+        for shortcut in appState.shortcuts {
+            descriptiveTypes.append(.init(actionType: .siriShortcut, siriShortcut: shortcut))
+        }
+        let filtered = descriptiveTypes.filter {descriptor in
+            let matchesSearch = searchText.isEmpty || descriptor.actionType.rawValue.lowercased().contains(searchText.lowercased()) || descriptor.siriShortcut.lowercased().contains(searchText.lowercased())
             let matchesFilter = selectedFilter == nil
-                || action.type == selectedFilter
+            || descriptor.actionType.category == selectedFilter
             return matchesSearch && matchesFilter
         }
-        
-        return filtered.sorted { $0.name < $1.name }
+        return filtered.sorted {
+            $0.actionType.rawValue < $1.actionType.rawValue
+        }
     }
     
     var body: some View {
@@ -184,30 +210,37 @@ struct ActionPickerView: View {
                         .padding(.horizontal)
                     
                     // MARK: Filter buttons
-                    ScrollView(.horizontal) { HStack {
+                    ScrollView(.horizontal) {
+                        HStack {
                         FilterButton(
-                            actionType: .keybind,
-                            isSelected: selectedFilter == .keybind,
-                            label: "Keybinds"
+                            actionCategory: .system,
+                            isSelected: selectedFilter == .system,
+                            label: "System"
                         ) {
-                            // Toggle the selected filter
-                            selectedFilter = (selectedFilter == .keybind) ? nil : .keybind
+                            withAnimation {
+                                // Toggle the selected filter
+                                selectedFilter = (selectedFilter == .system) ? nil : .system
+                            }
                         }
                         
                         FilterButton(
-                            actionType: .core,
+                            actionCategory: .core,
                             isSelected: selectedFilter == .core,
                             label: "Core"
                         ) {
-                            selectedFilter = (selectedFilter == .core) ? nil : .core
+                            withAnimation {
+                                selectedFilter = (selectedFilter == .core) ? nil : .core
+                            }
                         }
                         
                         FilterButton(
-                            actionType: .siriShortcut,
+                            actionCategory: .siriShortcut,
                             isSelected: selectedFilter == .siriShortcut,
                             label: "Siri Shortcuts"
                         ) {
-                            selectedFilter = (selectedFilter == .siriShortcut) ? nil : .siriShortcut
+                            withAnimation {
+                                selectedFilter = (selectedFilter == .siriShortcut) ? nil : .siriShortcut
+                            }
                         }
                     }
                       
@@ -216,23 +249,25 @@ struct ActionPickerView: View {
                     
                     // MARK: Filtered list
                     ScrollView {
-                        ForEach(filteredActions) { action in
-                            ActionRow(
-                                action: action,
-                                isSelected: selectedActionId == action.id,
+                        ForEach(filteredTypes, id: \.self) { actionTypeDescriptor in
+                            ActionTypeRow(
+                                actionTypeDescriptor: actionTypeDescriptor,
+                                isSelected: actionTypeDescriptor.actionType == .siriShortcut ? actionTypeDescriptor.siriShortcut == action.shortcut : action.type == actionTypeDescriptor.actionType
+                                ,
                                 onTap: {
-                                    selectedActionId = action.id
+                                    if actionTypeDescriptor.actionType == .siriShortcut {
+                                        action.shortcut = actionTypeDescriptor.siriShortcut
+                                    }
+                                    action.type = actionTypeDescriptor.actionType
                                     dismiss()
                                 }
+                            
                             )
                             .scrollTransition(.animated.threshold(.visible(0.9))) { view, transition in
                                 view.opacity(transition.isIdentity ? 1 : 0.3)
                                     .scaleEffect(transition.isIdentity ? 1 : 0.3)
                                     .blur(radius: transition.isIdentity ? 0 : 10)
                             }
-                        }
-                        .onDelete {indexSet in
-                            print("TEST")
                         }
                     }
                 }
@@ -241,11 +276,6 @@ struct ActionPickerView: View {
                         ToolbarItem(placement: .cancellationAction) {
                             Button("Cancel") {
                                 dismiss()
-                            }
-                        }
-                        ToolbarItem(placement: .primaryAction) {
-                            NavigationLink(destination: ActionCreationView()) {
-                                Image(systemName: "square.and.pencil")
                             }
                         }
                 }
@@ -257,7 +287,7 @@ struct ActionPickerView: View {
 // MARK: - Preview
 #Preview {
     let appState = AppState()
-    ActionPickerView(selectedActionId: .constant(""))
+    ActionTypePickerView(action: .constant(ActionModel()) )
         .environmentObject(appState)
         .onAppear {
             appState.actions.append(ActionModel(name: "TEST"))

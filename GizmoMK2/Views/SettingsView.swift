@@ -10,7 +10,6 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
     
-    @State var actionSheetPresented : Bool = false
     var body: some View {
         Form {
             Section(header:Text("General")) {
@@ -20,21 +19,11 @@ struct SettingsView: View {
                 }
             }
             
-            Section(header:EmptyView()) {
-                Button(action: {
-                    actionSheetPresented = true
-                }) {
-                    Text("Actions")
-                }
-            }
             
             Section(header: EmptyView()) {
                 NavigationLink("Pages", destination: PagesListView())
                 NavigationLink("Apps Customization", destination: AppsCustomizationListView())
             }
-        }
-        .sheet(isPresented: $actionSheetPresented) {
-            ActionPickerView(selectedActionId: .constant(""))
         }
         .navigationTitle("Settings")
     }

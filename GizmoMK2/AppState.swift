@@ -11,6 +11,8 @@ import Combine
 import Network
 
 
+
+
 class AppState: ObservableObject {
     @Published var foundHosts: [FoundHost] = []
     @Published var settings : Settings = Settings.load()
@@ -104,7 +106,7 @@ class AppState: ObservableObject {
             case .ready:
                 print("Connected to \(host.name) at \(host.hostName):\(host.port)")
                 self?.requestPages()
-                self?.requestActions()
+                self?.requestShortcuts()
                 self?.requestAppInfos()
             case .failed(let error):
                 print("Connection failed with error: \(error)")
@@ -147,45 +149,12 @@ class AppState: ObservableObject {
         }
     }
     
-    func requestActions() {
-        print("Getting actions...")
-        guard let connection = connection else { return }
-        let request = ListActionsRequest()
-        if let message = encodeMessage(type: .listActions, payload: request) {
-            sendMessage(message, on: connection)
-        }
-    }
     
     // Execute a specific action on the host
-    func executeAction(actionID: String) {
+    func executeAction(executorID: String, actionContextOption : ActionContextOption) {
         guard let connection = connection else { return }
-        guard let action = actions.first(where: { $0.id == actionID }) else {return}
-            switch action.type {
-            case .siriShortcut:
-                executeShortcut(shortcut: action.shortcut)
-            default:
-                let request = ExecuteActionRequest(actionID: actionID)
-                if let message = encodeMessage(type: .executeAction, payload: request) {
-                    sendMessage(message, on: connection)
-                }
-            }
-            
-            
-    }
-    
-    func executeShortcut(shortcut: String) {
-        guard let connection = connection else { return }
-        let request = ExecuteShortcutRequest(shortcut: shortcut)
-        if let message = encodeMessage(type: .executeShortcut, payload: request) {
-            sendMessage(message, on: connection)
-        }
-    }
-    
-    // Create a new action
-    func createAction(action: ActionModel) {
-        guard let connection = connection else { return }
-        let request = CreateActionRequest(action: action)
-        if let message = encodeMessage(type: .createAction, payload: request) {
+        let request = ExecuteActionRequest(executorID: executorID, actionContextOption: actionContextOption)
+        if let message = encodeMessage(type: .executeAction, payload: request) {
             sendMessage(message, on: connection)
         }
     }
@@ -223,23 +192,6 @@ class AppState: ObservableObject {
         }
     }
     
-    
-    // Modify an existing action
-    func modifyAction(action:ActionModel) {
-        guard let connection = connection else { return }
-        let request = ModifyActionRequest(action:action)
-        if let message = encodeMessage(type: .modifyAction, payload: request) {
-            sendMessage(message, on: connection)
-        }
-    }
-    
-    func deleteAction(id: String) {
-        guard let connection = connection else { return }
-        let request = DeleteActionRequest(actionID: id)
-        if let message = encodeMessage(type: .deleteAction, payload: request) {
-            sendMessage(message, on: connection)
-        }
-    }
     
     func deleteExecutor(id: String) {
         guard let connection = connection else {return}
@@ -375,33 +327,15 @@ class AppState: ObservableObject {
                         print("Shortcuts lsit updated with \(response.shortcuts.count) shortcuts.")
                     }
                 }
-            case .actionsList:
-                if let response = message.decodePayload(as: ActionsListResponse.self) {
-                    DispatchQueue.main.async {
-                        self.requestShortcuts()
-                        self.actions = response.actions
-                        self.actions.append(contentsOf: coreActions)
-                        print("Actions list updated with \(response.actions.count) actions.")
-                    }
-                }
             case .actionExecuted:
                 if let response = message.decodePayload(as: ActionExecutedResponse.self) {
                     print("Action executed: \(response.success ? "Success" : "Failure")")
-                }
-            case .actionUpdated:
-                if let response = message.decodePayload(as: ActionUpdatedResponse.self) {
-                    print("Action updated: \(response.success ? "Success" : "Failure")")
-                    requestActions()
                 }
             case .executorUpdated:
                 if let response = message.decodePayload(as: ExecutorUpdatedResponse.self) {
                     print("Action updated: \(response.success ? "Success" : "Failure")")
                     self.executorCreationModel = ExecutorModel(label:"Default Label")
                     self.requestPages()
-                }
-            case .actionDeleted:
-                if let response = message.decodePayload(as: ActionDeletedResponse.self) {
-                    print("Action deleted: \(response.success ? "Success" : "Failure")")
                 }
             case .executorDeleted:
                 if let response = message.decodePayload(as: ExecutorDeletedResponse.self) {

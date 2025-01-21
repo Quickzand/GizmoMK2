@@ -35,7 +35,7 @@ struct ExecutorView: View {
 
     var buttonView: some View {
         Button(action: {
-            appState.executeAction(actionID: executor.actionID)
+            appState.executeAction(executorID: executor.id, actionContextOption: .action)
             
             successCount += 1
 
@@ -95,6 +95,7 @@ struct ExecutorView: View {
                             startRadius: 0,
                             endRadius: itemWidth
                         )
+                        .blur(radius:10)
                         .cornerRadius(cellCornerRadius)
                     }
             } keyframes: {_ in 
@@ -211,10 +212,9 @@ struct ExecutorView: View {
                             let direction = currentActionNotchIndex - lastActionNotchIndex
                             if direction > 0 {
                                 // Clockwise rotation
-                                appState.executeAction(actionID: executor.actionID)
-                            } else if direction < 0 {
+                                appState.executeAction(executorID: executor.id, actionContextOption: .action)                            } else if direction < 0 {
                                 // Counter-clockwise rotation
-                                appState.executeAction(actionID: executor.secondaryActionID)
+                                    appState.executeAction(executorID: executor.id, actionContextOption: .secondaryAction)
                             }
 
                             // Update the last action notch index
@@ -273,18 +273,18 @@ struct ExecutorView: View {
                         if abs(dx) > abs(dy) {
                             if dx > 0 {
                                 // Swipe right
-                                appState.executeAction(actionID: executor.rightActionID)
+//                                appState.executeAction(actionID: executor.rightAction.id)
                             } else {
                                 // Swipe left
-                                appState.executeAction(actionID: executor.leftActionID)
+//                                appState.executeAction(actionID: executor.leftActionID)
                             }
                         } else {
                             if dy > 0 {
                                 // Swipe down
-                                appState.executeAction(actionID: executor.downActionID)
+//                                appState.executeAction(actionID: executor.downActionID)
                             } else {
                                 // Swipe up
-                                appState.executeAction(actionID: executor.upActionID)
+//                                appState.executeAction(actionID: executor.upActionID)
                             }
                         }
                     }
