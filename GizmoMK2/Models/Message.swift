@@ -31,6 +31,8 @@ enum MessageType: String, Codable {
     case pageUpdated
     case updateAppInfo
     case AppInfoUpdated
+    case getAppIcon
+    case appIconData
     case error
 }
 
@@ -160,6 +162,18 @@ struct AppInfoUpdatedResponse : Codable {
     let success: Bool
     let message: String?
 }
+
+
+struct GetAppIconRequest : Codable {
+    let bundleID : String
+}
+
+struct AppIconDataResponse : Codable {
+    let bundleID : String
+    let iconData : Data
+}
+
+
 
 
 

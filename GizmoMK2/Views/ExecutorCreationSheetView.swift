@@ -27,38 +27,36 @@ struct ExecutorCreationSheetView: View {
     @State private var gradientShift: CGFloat = 0.0
     
     var body: some View {
-        VStack {
-            ExecutorTypeSelectorView(submissionAnimation: submissionAnimation)
-                .scaleEffect(submissionAnimation ? 2 : 1)
-            
-            if !submissionAnimation {
-                ScrollView {
-                    ForegroundSectionView(
-                        iconPickerPresented: $iconPickerPresented
-                    )
-                    .scrollTransition(.animated.threshold(.visible(0.9))) { view, transition in
-                        view.opacity(transition.isIdentity ? 1 : 0.1)
-                            .scaleEffect(transition.isIdentity ? 1 : 0.1)
-                            .blur(radius: transition.isIdentity ? 0 : 10)
+        ZStack {
+            VStack {
+                ExecutorTypeSelectorView(submissionAnimation: submissionAnimation)
+                    .scaleEffect(submissionAnimation ? 2 : 1)
+                
+                if !submissionAnimation {
+                    ScrollView {
+                        VisualsSelectionView(
+                            iconPickerPresented: $iconPickerPresented
+                        )
+                        
+                        
+                        ActionSectionView()
+                        
+                        Spacer().frame(height: 100)
                     }
-                    BackgroundSectionView(
-                        selectedPhoto: $selectedPhoto
-                    )
-                    .scrollTransition(.animated.threshold(.visible(0.9))) { view, transition in
-                        view.opacity(transition.isIdentity ? 1 : 0)
-                        .scaleEffect(transition.isIdentity ? 1 : 0)
-                    }
-                    ActionSectionView()
+                    .shadow(radius:15)
+                    .opacity(submissionAnimation ? 0 : 1)
+                    .scrollContentBackground(.hidden)
+                    .padding(.horizontal)
                 }
+           
                 
-                .opacity(submissionAnimation ? 0 : 1)
-                .scrollContentBackground(.hidden)
-                .padding(.horizontal)
             }
-                
-            
-            SubmitButton(submissionAnimation: $submissionAnimation) {
-                submitForm()
+            VStack {
+                Spacer()
+                SubmitButton(submissionAnimation: $submissionAnimation, isEditing: appState.editMode) {
+                    submitForm()
+                }
+                .opacity(submissionAnimation ? 0 : 1)
             }
         }
         .background(
@@ -136,6 +134,8 @@ struct ExecutorTypeSelectorView: View {
                 .tag(InteractionType.knob)
             ExecutorView(executor: appState.executorCreationModel)
                 .tag(InteractionType.gesture)
+            ExecutorView(executor: appState.executorCreationModel)
+                .tag(InteractionType.display)
         }
         .frame(maxHeight: 200)
         .tabViewStyle(.page)
@@ -145,45 +145,57 @@ struct ExecutorTypeSelectorView: View {
     }
 }
 
-struct ForegroundSectionView: View {
+struct VisualsSelectionView: View {
     @EnvironmentObject var appState: AppState
     
     @State private var selectedForegroundColor: Color = .white
     
     @Binding var iconPickerPresented: Bool
     
+    @State private var selectedBackgroundColor: Color = .black
+    
     var body: some View {
-        Section(header: Text("Foreground")) {
-            VStack {
+        Section(header: Text("Visuals").creationRowViewStyle().cornerRadius(15).padding(.top)) {
+            VStack(spacing: 0) {
                 HStack {
+                    Text("Label: ")
+                    Spacer()
+                    TextField("Label", text: $appState.executorCreationModel.label)
+                        .creationRowViewStyle()
+                        .frame(width: 150)
+                        .cornerRadius(15)
                     Button {
                         withAnimation { appState.executorCreationModel.labelHidden.toggle() }
                     } label: {
                         Image(systemName: appState.executorCreationModel.labelHidden ? "eye.slash.fill" : "eye.fill")
+                            .aspectRatio(contentMode: .fill)
                     }
                     .buttonStyle(.plain)
-                    
-                    TextField("Label", text: $appState.executorCreationModel.label)
                 }
+                .creationRowViewStyle()
+                .clipShape(CustomCorners(corners: [.topLeft, .topRight], radius: 15))
                 
                 HStack {
                     Text("Icon: ")
-                    Button {
-                        withAnimation { appState.executorCreationModel.iconHidden.toggle() }
-                    } label: {
-                        Image(systemName: appState.executorCreationModel.iconHidden ? "eye.slash.fill" : "eye.fill")
-                    }
+                    Spacer()
                     Button {
                         iconPickerPresented = true
                     } label: {
                         Image(systemName: appState.executorCreationModel.icon)
+                    }.creationRowViewStyle().cornerRadius(15)
+                    Button {
+                        withAnimation { appState.executorCreationModel.iconHidden.toggle() }
+                    } label: {
+                        Image(systemName: appState.executorCreationModel.iconHidden ? "eye.slash.fill" : "eye.fill")
+                            .aspectRatio(contentMode: .fill)
                     }
-                    Spacer()
                 }
+                .creationRowViewStyle()
                 .buttonStyle(.plain)
                 
                 HStack {
                     Text("Foreground Color:")
+                    Spacer()
                     ColorPicker("", selection: $selectedForegroundColor, supportsOpacity: false)
                         .onChange(of: selectedForegroundColor) { newValue in
                             appState.executorCreationModel.foregroundColor = newValue.toHex() ?? "#000000"
@@ -192,10 +204,31 @@ struct ForegroundSectionView: View {
                             selectedForegroundColor = Color(hex: appState.executorCreationModel.foregroundColor)
                         }
                 }
+                .scrollTransition(
+                    topLeading: .animated.threshold(.visible(1.0)),
+                    bottomTrailing: .identity,
+                    axis: .vertical
+                ) { content, phase in
+                    content
+                        .opacity(phase.isIdentity ? 1 : 0.1)
+                        .scaleEffect(phase.isIdentity ? 1 : 0.1)
+                        .blur(radius: phase.isIdentity ? 0 : 10)
+                }
+                .creationRowViewStyle()
+                
+                HStack {
+                    Text("Background Color:")
+                    ColorPicker("", selection: $selectedBackgroundColor, supportsOpacity: false)
+                        .onChange(of: selectedBackgroundColor) { newValue in
+                            appState.executorCreationModel.backgroundColor = newValue.toHex() ?? "#000000"
+                        }
+                        .onAppear {
+                            selectedBackgroundColor = Color(hex: appState.executorCreationModel.backgroundColor)
+                        }
+                }
+                .creationRowViewStyle()
+                .clipShape(CustomCorners(corners: [.bottomLeft, .bottomRight], radius: 15))
             }
-            .padding()
-            .background(.thinMaterial)
-            .cornerRadius(10)
         }
     }
 }
@@ -207,10 +240,11 @@ struct BackgroundSectionView: View {
     @Binding var selectedPhoto: PhotosPickerItem?
     
     var body: some View {
-        Section(header: Text("Background")) {
+        Section(header: Text("Background").creationRowViewStyle().padding(.top)) {
             VStack {
                 HStack {
                     Text("Background Color:")
+                        .creationRowViewStyle()
                     ColorPicker("", selection: $selectedBackgroundColor, supportsOpacity: false)
                         .onChange(of: selectedBackgroundColor) { newValue in
                             appState.executorCreationModel.backgroundColor = newValue.toHex() ?? "#000000"
@@ -220,33 +254,35 @@ struct BackgroundSectionView: View {
                         }
                 }
                 HStack {
-                    PhotosPicker("Background Image", selection: $selectedPhoto)
-                        .onChange(of: selectedPhoto) { newValue in
-                            Task {
-                                if let selectedPhoto = selectedPhoto { // Safely unwrap the optional
-                                    if let image = try? await selectedPhoto.loadTransferable(type: Data.self) {
-                                        appState.executorCreationModel.backgroundImageData = image
-                                    }
-                                }
-                            }
-                        }
+                    //                    PhotosPicker("Background Image", selection: $selectedPhoto)
+                    //                        .onChange(of: selectedPhoto) { newValue in
+                    //                            Task {
+                    //                                if let selectedPhoto = selectedPhoto { // Safely unwrap the optional
+                    //                                    if let image = try? await selectedPhoto.loadTransferable(type: Data.self) {
+                    //                                        appState.executorCreationModel.backgroundImageData = image
+                    //                                    }
+                    //                                }
+                    //                            }
+                    //                        }
+                    //                        .creationRowViewStyle()
                     
                     if let image = UIImage(data:appState.executorCreationModel.backgroundImageData) {
                         Image(uiImage: image)
                             .resizable()
-                                   .aspectRatio(contentMode: .fit)
-                                   .frame(width: 200, height: 200) 
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 200, height: 200)
                     }
                     
                 }
                 HStack {
                     Text("Opacity:")
+                        .frame(height: 30)
+                        .creationRowViewStyle()
+                    
                     Slider(value: $appState.executorCreationModel.backgroundOpacity, in: 0...1)
+                        .creationRowViewStyle()
                 }
             }
-            .padding()
-            .background(.thinMaterial)
-            .cornerRadius(10)
         }
     }
 }
@@ -262,12 +298,65 @@ struct ActionSectionView: View {
         
         
         @EnvironmentObject var appState : AppState
-        @State var tempDestinationPageId : String = ""
+        
+        
+        var NumericActionValueCustomizationView: some View  {
+            HStack {
+                Text("\(associatedAction.type.valueLabel):")
+                Slider(value: $associatedAction.numericValue, in: associatedAction.type.numericInputStartingValue...associatedAction.type.numericInputEndingValue, step: associatedAction.type.numericInputStepSize)
+                Text("\(associatedAction.numericValue, specifier: "%.1f")")
+            }
+        }
+        
+        
+        var PageActionValueCustomizationView : some View {
+            HStack {
+                Text("Page:")
+                Spacer()
+                Picker("Page", selection: $associatedAction.destinationPageId) {
+                    ForEach(appState.pages.indices, id: \.self) { index in
+                        Text(appState.pages[index].name)
+                            .tag(appState.pages[index].id)
+                    }
+                }
+            }
+        }
+        
+        var KeybindActionValueCustomizationView : some View {
+            HStack {
+                ForEach(ModifierButton.allCases) {modifier in
+                    Button(action: {
+                        withAnimation {
+                            associatedAction.modifiers[modifier]?.toggle()
+                            
+                            if(associatedAction.modifiers[modifier] == nil) {
+                                associatedAction.modifiers[modifier] = true
+                            }
+                        }
+                    }) {
+                        Image(systemName: modifier.icon)
+                            .resizable()
+                            .bold(true)
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 20, height: 20)
+                            .creationRowViewStyle()
+                            .foregroundStyle(associatedAction.modifiers[modifier] == true ? Color.primaryAccent : Color.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 10.0))
+                    }
+                }
+                Spacer()
+                TextField("", text: $associatedAction.key)
+                    .frame(width: 10)
+                    .creationRowViewStyle()
+                    .multilineTextAlignment(.center)
+                    .clipShape(RoundedRectangle(cornerRadius: 10.0))
+            }
+        }
         
         
         var body : some View {
-            Section(header: Text(label)) {
-                VStack {
+            Section(header: Text(label).creationRowViewStyle().cornerRadius(15)) {
+                VStack(spacing: 0) {
                     HStack {
                         Button {
                             associatedActionPickerPresented = true
@@ -275,73 +364,77 @@ struct ActionSectionView: View {
                             HStack {
                                 Text("Action Type: ")
                                 Spacer()
-                                Image(systemName: associatedAction.type.category.associatedIcon)
-                                Text(associatedAction.type == .siriShortcut ? associatedAction.shortcut :  associatedAction.type.rawValue)
+                                HStack {
+                                    Image(systemName: associatedAction.type.category.associatedIcon)
+                                    Text(associatedAction.type == .siriShortcut ? associatedAction.shortcut :  associatedAction.type.rawValue)
+                                }
+                                .creationRowViewStyle()
                             }
                         }
                     }
-                    if associatedAction.type == .keybind {
-                        HStack {
-                            
+                    .creationRowViewStyle()
+                    .clipShape(CustomCorners(corners: [.topLeft, .topRight], radius: 15))
+                    .clipShape(CustomCorners(corners: [.bottomLeft, .bottomRight], radius: associatedAction.type == .none ? 15 : 0))
+                    Group {
+                        if associatedAction.type.inputType == .Numeric {
+                            NumericActionValueCustomizationView
+                        }
+                        if associatedAction.type.inputType == .Keybind {
+                            KeybindActionValueCustomizationView
+                        }
+                        if associatedAction.type.inputType == .Page {
+                            PageActionValueCustomizationView
                         }
                     }
-                    //                        if associatedAction.type == .core && associatedAction.coreActionType == .goToPage {
-                    //                            Picker("Page", selection: $associatedAction.destinationPageId) {
-                    //                                ForEach (appState.pages) { page in
-                    //                                    Text(page.name).tag(page.id)
-                    //                                }
-                    //                            }
-                    //                }
+                    .creationRowViewStyle()
+                    .clipShape(CustomCorners(corners: [.bottomLeft, .bottomRight], radius: 15))
+                    
                     
                 } .foregroundStyle (.primary)
-                   
+                
             }
-            .padding()
-            .background(.thinMaterial)
-            .cornerRadius(10)
             .sheet(isPresented: $associatedActionPickerPresented) {
                 ActionTypePickerView(action: $associatedAction)
-            }
-            .scrollTransition(.animated.threshold(.visible(1))) { view, transition in
-                view.opacity(transition.isIdentity ? 1 : 0)
-                .scaleEffect(transition.isIdentity ? 1 : 0)
             }
         }
     }
     
     var body: some View {
-            VStack {
-                switch appState.executorCreationModel.interactionType {
-                    case .button, .knob:
-                        ActionPickerView(label: "Action", associatedAction: $appState.executorCreationModel.action)
-                        
-                        if appState.executorCreationModel.interactionType == .knob {
-                            ActionPickerView(label:"Secondary Action", associatedAction: $appState.executorCreationModel.secondaryAction)
-                        }
-                case .gesture:
-                    EmptyView()
-                    ActionPickerView(label:"Up Action", associatedAction: $appState.executorCreationModel.upAction)
-                    ActionPickerView(label:"Down Action", associatedAction: $appState.executorCreationModel.downAction)
-                    ActionPickerView(label:"Left Action", associatedAction: $appState.executorCreationModel.leftAction)
-                    ActionPickerView(label:"Right Action", associatedAction: $appState.executorCreationModel.rightAction)
+        VStack {
+            switch appState.executorCreationModel.interactionType {
+            case .button, .knob:
+                ActionPickerView(label: "Action", associatedAction: $appState.executorCreationModel.action)
+                
+                if appState.executorCreationModel.interactionType == .knob {
+                    ActionPickerView(label:"Secondary Action", associatedAction: $appState.executorCreationModel.secondaryAction)
                 }
+            case .gesture:
+                ActionPickerView(label:"Up Action", associatedAction: $appState.executorCreationModel.upAction)
+                ActionPickerView(label:"Down Action", associatedAction: $appState.executorCreationModel.downAction)
+                ActionPickerView(label:"Left Action", associatedAction: $appState.executorCreationModel.leftAction)
+                ActionPickerView(label:"Right Action", associatedAction: $appState.executorCreationModel.rightAction)
+            case .display:
+                Text("TEST")
+            }
         }
     }
 }
 
 struct SubmitButton: View {
     @Binding var submissionAnimation: Bool
+    var isEditing : Bool = false
     var onSubmit: () -> Void
     
     var body: some View {
         Button {
             onSubmit()
         } label: {
-            Text("Submit")
+            Text(isEditing ? "Update" : "Create")
                 .padding(.top)
                 .frame(maxWidth: .infinity)
-                .background(.ultraThinMaterial.opacity(0.5))
+                .background(.ultraThinMaterial.opacity(1))
                 .font(.system(size: 30, weight: .bold))
+                .shadow(radius:10)
         }
         .foregroundStyle(.foreground)
     }
@@ -385,6 +478,26 @@ struct MeshGradientLayer: View {
             .opacity(gradientOpacity)
             .blendMode(.plusLighter)
             .ignoresSafeArea()
+    }
+}
+
+
+// MARK: - Executor Creation Row View Style
+extension View {
+    func creationRowViewStyle() -> some View {
+        self
+            .padding()
+            .background(.thinMaterial)
+            .scrollTransition(
+                topLeading: .animated.threshold(.visible(1.0)),
+                bottomTrailing: .identity,
+                axis: .vertical
+            ) { content, phase in
+                content
+                    .opacity(phase.isIdentity ? 1 : 0.1)
+                    .scaleEffect(phase.isIdentity ? 1 : 0.1)
+                    .blur(radius: phase.isIdentity ? 0 : 10)
+            }
     }
 }
 

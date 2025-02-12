@@ -88,6 +88,10 @@ struct PageCreationSheetView : View {
     @EnvironmentObject var appState : AppState
     @Environment(\.dismiss) private var dismiss
     @State private var selectedBackgroundColor : Color = .black
+    
+    @State private var selectedPrimaryAccentColor : Color = .primaryAccent
+    @State private var selectedSecondaryAccentColor : Color = .secondaryAccent
+    @State private var selectedTertiaryAccentColor : Color = .tertiaryAccent
 
     var isEditing : Bool = false
     
@@ -133,8 +137,8 @@ struct PageCreationSheetView : View {
                 }
                 .padding(.top)
                 
-                SubmitButton(submissionAnimation: .constant(false)) {
-                    if(isEditing) {
+                SubmitButton(submissionAnimation: .constant(false), isEditing: appState.editMode) {
+                    if(appState.editMode) {
                         appState.modifyPage(page:appState.pageCreationModel)
                     }
                     else {
@@ -182,6 +186,32 @@ extension PageCreationSheetView {
                         appState.pageCreationModel.backgroundColor = selectedBackgroundColor.toHex() ?? "#000"
                         print(appState.pageCreationModel.backgroundColor)
                     }
+            case .mesh:
+                ColorPicker("Primary Accent", selection: $selectedPrimaryAccentColor, supportsOpacity: false)
+                    .onAppear {
+                        selectedPrimaryAccentColor = .init(hex: appState.pageCreationModel.primaryAccentColor)
+                    }
+                    .onChange(of: selectedPrimaryAccentColor) {
+                        appState.pageCreationModel.primaryAccentColor = selectedPrimaryAccentColor.toHex() ?? "#000"
+                    }
+                
+                
+                ColorPicker("Secondary Accent", selection: $selectedSecondaryAccentColor, supportsOpacity: false)
+                    .onAppear {
+                        selectedSecondaryAccentColor = .init(hex: appState.pageCreationModel.secondaryAccentColor)
+                    }
+                    .onChange(of: selectedSecondaryAccentColor) {
+                        appState.pageCreationModel.secondaryAccentColor = selectedSecondaryAccentColor.toHex() ?? "#000"
+                    }
+                
+                
+                ColorPicker("Tertiary Accent", selection: $selectedTertiaryAccentColor, supportsOpacity: false)
+                    .onAppear {
+                        selectedTertiaryAccentColor = .init(hex: appState.pageCreationModel.tertiaryAccentColor)
+                    }
+                    .onChange(of: selectedTertiaryAccentColor) {
+                        appState.pageCreationModel.tertiaryAccentColor = selectedTertiaryAccentColor.toHex() ?? "#000"
+                    }
             default:
                 EmptyView()
             }
@@ -191,5 +221,5 @@ extension PageCreationSheetView {
 }
 
 #Preview {
-    PageCreationSheetView()
+    PageCreationSheetView().environmentObject(AppState())
 }

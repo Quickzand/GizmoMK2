@@ -289,7 +289,4 @@ struct ActionTypePickerView: View {
     let appState = AppState()
     ActionTypePickerView(action: .constant(ActionModel()) )
         .environmentObject(appState)
-        .onAppear {
-            appState.actions.append(ActionModel(name: "TEST"))
-        }
 }

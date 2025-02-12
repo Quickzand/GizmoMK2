@@ -191,6 +191,16 @@ extension HomeView {
         .sheet(isPresented: $appState.pageCreationShown) {
             PageCreationSheetView()
         }
+        .onChange(of: appState.currentlyDisplayedPageID) {
+            if appState.currentlyDisplayedPageID == "" {
+                return
+            }
+            withAnimation {
+                appState.currentPageID = appState.currentlyDisplayedPageID
+                localPageID = appState.currentPageID
+                appState.currentlyDisplayedPageID = ""
+            }
+        }
     }
     
     @ViewBuilder
@@ -238,12 +248,15 @@ extension HomeView {
     private func getValidPages() -> [PageModel] {
         return appState.pages.filter { page in
             // If the focused app doesn’t limit pages, all pages are valid
-            if appState.focusedApp.associatedPageIDs.isEmpty {
+            if appState.focusedApp.associatedPageIDs.isEmpty || appState.currentlyDisplayedPageID != "" {
                 return true
             }
+            
             // Otherwise, is this page included in the app’s associated pages?
             return appState.focusedApp.associatedPageIDs[page.id] ?? false
         }
+        
+        
     }
     
     private func validateCurrentPageID(validPages: [PageModel]) {

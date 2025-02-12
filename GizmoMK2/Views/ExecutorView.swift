@@ -164,6 +164,8 @@ struct ExecutorView: View {
                 }
             }
             .rotationEffect(Angle(degrees: currentAngle))
+            .shadow(color:Color(hex:executor.foregroundColor).opacity(0.25), radius: 10)
+            .shadow(radius:15)
             .gesture(
                 DragGesture(minimumDistance: 0.0)
                     .onChanged { value in
@@ -266,25 +268,84 @@ struct ExecutorView: View {
             .cornerRadius(cellCornerRadius)
             .shadow(radius: 15)
             .gesture(
-                DragGesture(minimumDistance: 30)
+                DragGesture(minimumDistance: 10)
                     .onEnded { value in
                         let dx = value.translation.width
                         let dy = value.translation.height
                         if abs(dx) > abs(dy) {
                             if dx > 0 {
                                 // Swipe right
-//                                appState.executeAction(actionID: executor.rightAction.id)
+                                appState.executeAction(executorID: executor.id, actionContextOption: .rightAction)
                             } else {
                                 // Swipe left
-//                                appState.executeAction(actionID: executor.leftActionID)
+                                appState.executeAction(executorID: executor.id, actionContextOption: .leftAction)
                             }
                         } else {
                             if dy > 0 {
                                 // Swipe down
-//                                appState.executeAction(actionID: executor.downActionID)
+                                appState.executeAction(executorID: executor.id, actionContextOption: .downAction)
                             } else {
                                 // Swipe up
-//                                appState.executeAction(actionID: executor.upActionID)
+                                appState.executeAction(executorID: executor.id, actionContextOption: .upAction)
+                            }
+                        }
+                    }
+            )
+        }
+    }
+    
+    var displayView : some View {
+        Group {
+            ZStack {
+                VStack {
+                    if !executor.iconHidden {
+                        Image(systemName: executor.icon)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                    }
+                    if !executor.labelHidden {
+                        Text(executor.label)
+                    }
+                }
+                .foregroundStyle(Color(hex: executor.foregroundColor))
+            }
+            .padding(2)
+            .frame(width: itemWidth, height: itemWidth)
+            .background(
+                ZStack {
+                    
+                    Circle()
+                        .fill(.primaryAccent)
+                        .frame(width:100, height:100)
+                        .blur(radius:30)
+                    
+                    Color(hex: executor.backgroundColor).opacity(executor.backgroundOpacity)
+                    
+                    
+                }
+            )
+            .cornerRadius(cellCornerRadius)
+            .shadow(radius: 15)
+            .gesture(
+                DragGesture(minimumDistance: 10)
+                    .onEnded { value in
+                        let dx = value.translation.width
+                        let dy = value.translation.height
+                        if abs(dx) > abs(dy) {
+                            if dx > 0 {
+                                // Swipe right
+                                appState.executeAction(executorID: executor.id, actionContextOption: .rightAction)
+                            } else {
+                                // Swipe left
+                                appState.executeAction(executorID: executor.id, actionContextOption: .leftAction)
+                            }
+                        } else {
+                            if dy > 0 {
+                                // Swipe down
+                                appState.executeAction(executorID: executor.id, actionContextOption: .downAction)
+                            } else {
+                                // Swipe up
+                                appState.executeAction(executorID: executor.id, actionContextOption: .upAction)
                             }
                         }
                     }
@@ -301,6 +362,8 @@ struct ExecutorView: View {
                 knobView
             case .gesture:
                 gestureView
+            case .display:
+                displayView
             }
         }
         .overlay {
@@ -385,6 +448,6 @@ struct GridBackground: View {
 }
 
 #Preview {
-    ExecutorView(executor: ExecutorModel(label: "Volume", interactionType: .button, icon: "speaker.wave.2.fill", backgroundColor: "#FAFAFA"))
+    ExecutorView(executor: ExecutorModel(label: "Volume", interactionType: .knob, icon: "speaker.wave.2.fill", backgroundColor: "#FAFAFA"))
         .environmentObject(AppState())
 }

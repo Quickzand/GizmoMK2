@@ -9,6 +9,7 @@ import Foundation
 import SwiftUI
 import Combine
 import Network
+import UIKit
 
 
 
@@ -17,7 +18,6 @@ class AppState: ObservableObject {
     @Published var foundHosts: [FoundHost] = []
     @Published var settings : Settings = Settings.load()
     @Published var pages: [PageModel] = []
-    @Published var actions : [ActionModel] = []
     @Published var currentPageID: String = "1"
     @Published var editMode : Bool = false
     
@@ -33,6 +33,7 @@ class AppState: ObservableObject {
     
     @Published var appInfos : [AppInfoModel] = []
     
+    @Published var currentlyDisplayedPageID : String = ""
     
     
     @Published var deviceOrientation: UIDeviceOrientation = UIDevice.current.orientation
@@ -149,14 +150,46 @@ class AppState: ObservableObject {
         }
     }
     
+    func requestAppIcon(bundleID : String) {
+        print("Getting app icon...")
+        guard let connection = connection else {return}
+        let request = GetAppIconRequest(bundleID: bundleID)
+        if let message = encodeMessage(type: .getAppIcon, payload: request) {
+            sendMessage(message, on:connection)
+        }
+    }
+    
     
     // Execute a specific action on the host
     func executeAction(executorID: String, actionContextOption : ActionContextOption) {
         guard let connection = connection else { return }
+        var executor : ExecutorModel?;
+        for page in pages {
+            executor = page.getExecutor(withId: executorID)
+            if executor != nil {
+                break
+            }
+        }
+        guard let executor = executor else {return}
+        
+        let action = actionContextOption.correspondingActionModel(for: executor)
+        
+        if action.type == .goToPage {
+            goToPage(pageID: action.destinationPageId)
+            return
+        }
+        
+        
         let request = ExecuteActionRequest(executorID: executorID, actionContextOption: actionContextOption)
         if let message = encodeMessage(type: .executeAction, payload: request) {
             sendMessage(message, on: connection)
         }
+    }
+    
+    func goToPage(pageID: String) {
+        print("Going to page with id: \(pageID)")
+        
+        currentlyDisplayedPageID = pageID
     }
     
 //    Create a new executor
@@ -321,9 +354,6 @@ class AppState: ObservableObject {
                 if let response = message.decodePayload(as: ShortcutsListResponse.self) {
                     DispatchQueue.main.async {
                         self.shortcuts = response.shortcuts
-                        for shortcut in self.shortcuts {
-                            self.actions.append(ActionModel(name: shortcut, type: .siriShortcut))
-                        }
                         print("Shortcuts lsit updated with \(response.shortcuts.count) shortcuts.")
                     }
                 }
@@ -334,7 +364,6 @@ class AppState: ObservableObject {
             case .executorUpdated:
                 if let response = message.decodePayload(as: ExecutorUpdatedResponse.self) {
                     print("Action updated: \(response.success ? "Success" : "Failure")")
-                    self.executorCreationModel = ExecutorModel(label:"Default Label")
                     self.requestPages()
                 }
             case .executorDeleted:
@@ -366,6 +395,12 @@ class AppState: ObservableObject {
                         self.requestPages()
                     }
                 }
+            case .appIconData:
+                if let response = message.decodePayload(as: AppIconDataResponse.self) {
+                    if let appInfoIndex = self.appInfos.firstIndex(where: {$0.bundleID == response.bundleID}) {
+                        self.appInfos[appInfoIndex].appIcon = dataToCGImage(response.iconData)
+                    }
+                }
             case .error:
                 if let errorMsg = message.decodePayload(as: ErrorMessage.self) {
                     print("Error from host: \(errorMsg.message)")
@@ -378,6 +413,15 @@ class AppState: ObservableObject {
         }
     }
 }
+
+func dataToCGImage(_ data: Data) -> CGImage? {
+    guard let uiImage = UIImage(data: data)?.cgImage else {
+        print("Failed to create CGImage from data")
+        return nil
+    }
+    return uiImage
+}
+
 
 // MARK: - Message Decoding Extensions
 extension Message {
