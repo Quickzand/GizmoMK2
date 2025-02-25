@@ -194,6 +194,15 @@ struct VisualsSelectionView: View {
                 .buttonStyle(.plain)
                 
                 HStack {
+                    Text("Background Image: ")
+                    Spacer()
+                    RoundedRectangle(cornerRadius:15)
+                        .foregroundStyle(.thinMaterial)
+                        .frame(width:50, height:50)
+                        
+                }.creationRowViewStyle()
+                
+                HStack {
                     Text("Foreground Color:")
                     Spacer()
                     ColorPicker("", selection: $selectedForegroundColor, supportsOpacity: false)
@@ -203,16 +212,6 @@ struct VisualsSelectionView: View {
                         .onAppear {
                             selectedForegroundColor = Color(hex: appState.executorCreationModel.foregroundColor)
                         }
-                }
-                .scrollTransition(
-                    topLeading: .animated.threshold(.visible(1.0)),
-                    bottomTrailing: .identity,
-                    axis: .vertical
-                ) { content, phase in
-                    content
-                        .opacity(phase.isIdentity ? 1 : 0.1)
-                        .scaleEffect(phase.isIdentity ? 1 : 0.1)
-                        .blur(radius: phase.isIdentity ? 0 : 10)
                 }
                 .creationRowViewStyle()
                 
@@ -228,6 +227,8 @@ struct VisualsSelectionView: View {
                 }
                 .creationRowViewStyle()
                 .clipShape(CustomCorners(corners: [.bottomLeft, .bottomRight], radius: 15))
+                
+                
             }
         }
     }
@@ -266,12 +267,12 @@ struct BackgroundSectionView: View {
                     //                        }
                     //                        .creationRowViewStyle()
                     
-                    if let image = UIImage(data:appState.executorCreationModel.backgroundImageData) {
-                        Image(uiImage: image)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 200, height: 200)
-                    }
+//                    if let image = UIImage(data:appState.executorCreationModel.backgroundImageData) {
+//                        Image(uiImage: image)
+//                            .resizable()
+//                            .aspectRatio(contentMode: .fit)
+//                            .frame(width: 200, height: 200)
+//                    }
                     
                 }
                 HStack {
@@ -296,6 +297,8 @@ struct ActionSectionView: View {
         @Binding var associatedAction : ActionModel
         @State var associatedActionPickerPresented: Bool = false
         
+        @State var associatedAppPickerPresented : Bool = false
+        
         
         @EnvironmentObject var appState : AppState
         
@@ -317,6 +320,28 @@ struct ActionSectionView: View {
                     ForEach(appState.pages.indices, id: \.self) { index in
                         Text(appState.pages[index].name)
                             .tag(appState.pages[index].id)
+                    }
+                }
+            }
+        }
+        
+        var AppActionValueCustomizationView : some View {
+            Button(action: {
+                associatedAppPickerPresented = true
+            }) {
+                HStack {
+                    Text("Selected App:")
+                    Spacer()
+                    if let appInfo = appState.appInfos.first(where: {$0.bundleID == associatedAction.openAppBundleId}) {
+                        HStack {
+                            if let appIcon = appInfo.appIcon {
+                                Image(uiImage: UIImage(cgImage: appIcon)).resizable()
+                                    .frame(width:25, height:25)
+                            }
+                            Text(appInfo.name)
+                        }
+                        .creationRowViewStyle()
+                        .clipShape(RoundedRectangle(cornerRadius: 10.0))
                     }
                 }
             }
@@ -369,12 +394,14 @@ struct ActionSectionView: View {
                                     Text(associatedAction.type == .siriShortcut ? associatedAction.shortcut :  associatedAction.type.rawValue)
                                 }
                                 .creationRowViewStyle()
+                                .clipShape(RoundedRectangle(cornerRadius:15))
+                                
                             }
                         }
                     }
                     .creationRowViewStyle()
                     .clipShape(CustomCorners(corners: [.topLeft, .topRight], radius: 15))
-                    .clipShape(CustomCorners(corners: [.bottomLeft, .bottomRight], radius: associatedAction.type == .none ? 15 : 0))
+                    .clipShape(CustomCorners(corners: [.bottomLeft, .bottomRight], radius: associatedAction.type == .none || associatedAction.type.inputType == .none ? 15 : 0))
                     Group {
                         if associatedAction.type.inputType == .Numeric {
                             NumericActionValueCustomizationView
@@ -384,6 +411,9 @@ struct ActionSectionView: View {
                         }
                         if associatedAction.type.inputType == .Page {
                             PageActionValueCustomizationView
+                        }
+                        if associatedAction.type.inputType == .App {
+                            AppActionValueCustomizationView
                         }
                     }
                     .creationRowViewStyle()
@@ -395,6 +425,9 @@ struct ActionSectionView: View {
             }
             .sheet(isPresented: $associatedActionPickerPresented) {
                 ActionTypePickerView(action: $associatedAction)
+            }
+            .sheet(isPresented: $associatedAppPickerPresented) {
+                AppInfoSelectionListView(selectedAppBundleId: $associatedAction.openAppBundleId)
             }
         }
     }

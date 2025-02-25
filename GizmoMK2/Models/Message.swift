@@ -33,6 +33,9 @@ enum MessageType: String, Codable {
     case AppInfoUpdated
     case getAppIcon
     case appIconData
+    case getExecutorImage
+    case executorImageData
+    case saveExecutorImage
     case error
 }
 
@@ -171,6 +174,20 @@ struct GetAppIconRequest : Codable {
 struct AppIconDataResponse : Codable {
     let bundleID : String
     let iconData : Data
+}
+
+struct GetExecutorImageRequest : Codable {
+    let executorID : String
+}
+
+struct SaveExecutorImageRequest : Codable {
+    let executorID: String
+    let imageData : Data
+}
+
+struct ExecutorImageDataResponse : Codable {
+    let executorID : String
+    let imageData : Data
 }
 
 

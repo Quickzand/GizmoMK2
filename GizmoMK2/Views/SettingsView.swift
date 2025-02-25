@@ -22,7 +22,7 @@ struct SettingsView: View {
             
             Section(header: EmptyView()) {
                 NavigationLink("Pages", destination: PagesListView())
-                NavigationLink("Apps Customization", destination: AppsCustomizationListView())
+                NavigationLink("Apps Customization", destination: AppInfoSelectionListView(selectedAppBundleId: .constant(""),navigationSelection: true))
             }
         }
         .navigationTitle("Settings")
